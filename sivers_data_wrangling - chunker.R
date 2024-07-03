@@ -7,7 +7,7 @@ rm(list = ls())
 
 # source the EEVEE mask decoder and helper functions
 source("/Users/brianpile/POET Technologies Dropbox/Brian Pile/Brian Pile/R_scripts/POET LD maskset decoders/decode_eevee.R")
-source("./config_file.R")
+source("./config_info.R")
 # 
 # input_data_path = "/Users/brianpile/POET Technologies Dropbox/Brian Pile/1) Test/1.4) Outsource (dropbox)/Sivers/P10515"
 file_list = list.files(path = config_info$input_data_path,

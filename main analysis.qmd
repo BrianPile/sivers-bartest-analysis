@@ -17,7 +17,7 @@ theme_set(theme_bw())
 source("/Users/brianpile/POET Technologies Dropbox/Brian Pile/Brian Pile/R_scripts/POET LD maskset decoders/decode_eevee.R")
 
 # source config file
-source("./config_file.R")
+source("./config_info.R")
 
 # calibration constants
 # TODO: put calibration constants inside config file?

@@ -6,7 +6,7 @@ library(writexl)
 rm(list = ls())
 
 # source the config file
-source("./config_file.R")
+source("./config_info.R")
 
 #### LIV DATA SUMMARIZATION ####
 df_liv = data.table::fread(file = paste0("./data/", config_info$lotID, "_combined_LIV.csv"))
