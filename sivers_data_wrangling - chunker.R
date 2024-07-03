@@ -7,19 +7,17 @@ rm(list = ls())
 
 # source the EEVEE mask decoder and helper functions
 source("/Users/brianpile/POET Technologies Dropbox/Brian Pile/Brian Pile/R_scripts/POET LD maskset decoders/decode_eevee.R")
+source("./config_file.R")
 # 
-input_data_path = "/Users/brianpile/POET Technologies Dropbox/Brian Pile/1) Test/1.4) Outsource (dropbox)/Sivers/P10513"
-file_list = list.files(path = input_data_path,
+# input_data_path = "/Users/brianpile/POET Technologies Dropbox/Brian Pile/1) Test/1.4) Outsource (dropbox)/Sivers/P10515"
+file_list = list.files(path = config_info$input_data_path,
                        full.names = TRUE,
                        pattern = "_GP[0-9][0-9]_dat\\.xls$",
                        # pattern = "P10515-7_755&756_82A_GP04_dat.xls",
                        recursive = TRUE)
 
 # remove problematic file(s)
-problem_files = c(
-  "/Users/brianpile/POET Technologies Dropbox/Brian Pile/1) Test/1.4) Outsource (dropbox)/Sivers/P10513/P10513-1/P10513-1_757&758_64L_GP04_dat.xls",   # corrupt?
-  "/Users/brianpile/POET Technologies Dropbox/Brian Pile/1) Test/1.4) Outsource (dropbox)/Sivers/P10513/P10513-1/P10513-1_757 &758_72L_GP04_RT_dat.xls"  # non-compliant file name
-  )
+problem_files = config_info$problem_files
 file_list = setdiff(file_list, problem_files)
 
 chunk_len = 10
@@ -109,7 +107,7 @@ while (TRUE) {
   #### join L-I and V-I data together ####
   df_liv = left_join(df_pow, df_vf) |>
     mutate(
-      waferID = "71634_10",
+      waferID = config_info$waferID,
       cellID = "NA",
       tempC = 50
     ) |>
@@ -118,15 +116,11 @@ while (TRUE) {
     select(filename, lotID, SN, tempC, current, power, voltage) |>
     as_tibble()
   
-  # df_liv = df_liv |>
-  #   mutate(dLdI = my_derivative(current, power),
-  #          dVdI = my_derivative(current, voltage))
-  
   # save to csv file
   print("saving liv chunk data to file...")
   data.table::fwrite(
     x = df_liv,
-    file = "./data/P10513_combined_LIV.csv",
+    file = paste0("./data/", config_info$lotID, "_combined_LIV.csv"),
     append = append_mode
   )
   append_mode = TRUE # on subsequent iteration append to file
@@ -141,10 +135,10 @@ while (TRUE) {
 }
 
 # remove duplicate data
-df_liv = data.table::fread("./data/P10513_combined_LIV.csv")
+df_liv = data.table::fread(paste0("./data/", config_info$lotID, "_combined_LIV.csv"))
 df_liv |> 
   distinct(SN, tempC, current, .keep_all = TRUE) |> 
-  data.table::fwrite(file = "./data/P10513_combined_LIV.csv")
+  data.table::fwrite(file = paste0("./data/", config_info$lotID, "_combined_LIV.csv"))
 
 # clean up
 rm(df_liv, df_pow, df_pow_wide, df_vf, df_vf_wide)
@@ -238,7 +232,7 @@ while (TRUE) {
     mutate(barID = str_sub(barID, start = 1, end = 2)) |>
     # select(filename, lotID, barID, dieID, If, wavelength, power) |>
     mutate(
-      waferID = "71634_10",
+      waferID = config_info$waferID,
       cellID = "NA",
       tempC = 50
     ) |>
@@ -256,7 +250,7 @@ while (TRUE) {
   print("saving osa chunk data to file...")
   data.table::fwrite(
     x = df_osa,
-    file = "./data/P10513_combined_OSA.csv",
+    file = paste0("./data/", config_info$lotID, "_combined_OSA.csv"),
     append = append_mode
   )
   append_mode = TRUE # on subsequent iteration append to file
@@ -271,7 +265,7 @@ while (TRUE) {
 }
 
 # remove duplicate data
-df_osa = data.table::fread(file = "./data/P10513_combined_OSA.csv")
+df_osa = data.table::fread(file = paste0("./data/", config_info$lotID, "_combined_OSA.csv"))
 df_osa |> 
   distinct(SN, tempC, If, wavelength, .keep_all = TRUE) |> 
-  data.table::fwrite(file = "./data/P10513_combined_OSA.csv")
+  data.table::fwrite(file = paste0("./data/", config_info$lotID, "_combined_OSA.csv"))

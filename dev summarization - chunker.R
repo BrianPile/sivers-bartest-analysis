@@ -1,28 +1,20 @@
-# Sivers LOT P10515 Data Summarization
+# Sivers LOT Data Summarization
 library(tidyverse)
 library(devparext)
 library(readxl)
 library(writexl)
-# library(jsonlite)
 rm(list = ls())
 
-# # source my LD extraction functions
-# source("/Users/brianpile/Dropbox (POET Technologies)/Brian Pile/R_scripts/laser analysis/myfuncs_LIVextraction.R")
-
-# # source my analysis helper functions
-# source("/Users/brianpile/Dropbox (POET Technologies)/Brian Pile/R_scripts/laser analysis/myfuncs_LDanalysis_utility_v2.R")
+# source the config file
+source("./config_file.R")
 
 #### LIV DATA SUMMARIZATION ####
-# # from csv
-df_liv = data.table::fread(file = "./data/P10513_combined_LIV.csv")
+df_liv = data.table::fread(file = paste0("./data/", config_info$lotID, "_combined_LIV.csv"))
 
 df_liv = df_liv |> 
   group_by(filename, lotID, SN, tempC) |> 
   mutate(group_id = cur_group_id()) |> 
   ungroup()
-
-# REMOVE DUPLICATE DATA
-# df_liv = df_liv %>% distinct(SN, current, .keep_all = TRUE)
 
 If_vec = c(200, 300, 400)*1e-3
 Ix_vec = c(100, 200, 300)*1e-3
@@ -58,7 +50,7 @@ while (TRUE) {
   cat("saving liv chunk data to file...\n")
   data.table::fwrite(
     x = df_summary_liv,
-    file = "./data/P10513_summary_liv.csv",
+    file = paste0("./data/", config_info$lotID, "_summary_liv.csv"),
     append = append_mode
   )
   append_mode = TRUE
@@ -76,17 +68,13 @@ rm(df_liv, this_df_liv, df_summary_liv)
 #### OSA DATA SUMMARIZATION ####
 
 # from csv
-df_osa = data.table::fread(file = "./data/P10513_combined_OSA.csv") |>
+df_osa = data.table::fread(file = paste0("./data/", config_info$lotID, "_combined_OSA.csv")) |>
   rename(If_osa = If)
 
 df_osa = df_osa |> 
   group_by(lotID, SN, tempC, If_osa) |> 
   mutate(group_id = cur_group_id()) |> 
   ungroup()
-
-# REMOVE DUPLICATE DATA
-# df_osa = distinct(df_osa, SN, tempC, osa_bias, wavelength, .keep_all = TRUE)
-
 
 chunk_len = 1000
 idx1 = 1
@@ -131,7 +119,7 @@ df_summary_osa_wide = df_summary_osa %>%
   cat("saving osa chunk data to file...\n")
   data.table::fwrite(
     x = df_summary_osa_wide,
-    file = "./data/P10513_summary_osa.csv",
+    file = paste0("./data/", config_info$lotID, "_summary_osa.csv"),
     append = append_mode
   )
   append_mode = TRUE
@@ -147,8 +135,8 @@ df_summary_osa_wide = df_summary_osa %>%
 rm(df_osa, this_df_osa, df_osa_wide)
 
 #### COMBINE SUMMARIES ####
-df_summary_liv = data.table::fread(file = "./data/P10513_summary_liv.csv")
-df_summary_osa = data.table::fread(file = "./data/P10513_summary_osa.csv")
+df_summary_liv = data.table::fread(file = paste0("./data/", config_info$lotID, "_summary_liv.csv"))
+df_summary_osa = data.table::fread(file = paste0("./data/", config_info$lotID, "_summary_osa.csv"))
 df_summary = full_join(df_summary_liv, df_summary_osa)
 df_summary = df_summary |> mutate(across(where(is.numeric), \(x) round(x, 4)))
-data.table::fwrite(df_summary, file = "./data/P10513_summary.csv")
+data.table::fwrite(df_summary, file = paste0("./data/", config_info$lotID, "_summary.csv"))
