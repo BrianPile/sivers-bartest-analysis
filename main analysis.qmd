@@ -1,15 +1,3 @@
----
-title: "Sivers Bar Test Report: Lot P10515"
-subtitle: "EEVEE C-band Wafer 71636-30"
-author: "Brian Pile"
-date: "2024-07-03"
-format:
-  html:
-    toc: true
-execute: 
-  echo: false
-embed-resources: true
----
 
 ```{r}
 #| label: setup
