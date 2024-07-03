@@ -18,7 +18,8 @@ df_liv = data.table::fread(file = "./data/P10513_combined_LIV.csv")
 
 df_liv = df_liv |> 
   group_by(filename, lotID, SN, tempC) |> 
-  mutate(group_id = cur_group_id())
+  mutate(group_id = cur_group_id()) |> 
+  ungroup()
 
 # REMOVE DUPLICATE DATA
 # df_liv = df_liv %>% distinct(SN, current, .keep_all = TRUE)

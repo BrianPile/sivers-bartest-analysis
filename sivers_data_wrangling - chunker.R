@@ -3,11 +3,11 @@ library(readxl)
 library(devparext)
 rm(list = ls())
 
+# TODO: make a config file with the Almae wafer no and Sivers lot ID in it
+
 # source the EEVEE mask decoder and helper functions
 source("/Users/brianpile/POET Technologies Dropbox/Brian Pile/Brian Pile/R_scripts/POET LD maskset decoders/decode_eevee.R")
-
-
-# P10515
+# 
 input_data_path = "/Users/brianpile/POET Technologies Dropbox/Brian Pile/1) Test/1.4) Outsource (dropbox)/Sivers/P10513"
 file_list = list.files(path = input_data_path,
                        full.names = TRUE,
@@ -21,7 +21,6 @@ problem_files = c(
   "/Users/brianpile/POET Technologies Dropbox/Brian Pile/1) Test/1.4) Outsource (dropbox)/Sivers/P10513/P10513-1/P10513-1_757 &758_72L_GP04_RT_dat.xls"  # non-compliant file name
   )
 file_list = setdiff(file_list, problem_files)
-
 
 chunk_len = 10
 idx1 = 1
@@ -139,8 +138,13 @@ while (TRUE) {
     break
   }
   
-
 }
+
+# remove duplicate data
+df_liv = data.table::fread("./data/P10513_combined_LIV.csv")
+df_liv |> 
+  distinct(SN, tempC, current, .keep_all = TRUE) |> 
+  data.table::fwrite(file = "./data/P10513_combined_LIV.csv")
 
 # clean up
 rm(df_liv, df_pow, df_pow_wide, df_vf, df_vf_wide)
@@ -266,7 +270,8 @@ while (TRUE) {
   
 }
 
-
-# launch the device summarization script
-# source("./dev summarization - chunker.R")
-
+# remove duplicate data
+df_osa = data.table::fread(file = "./data/P10513_combined_OSA.csv")
+df_osa |> 
+  distinct(SN, tempC, If, wavelength, .keep_all = TRUE) |> 
+  data.table::fwrite(file = "./data/P10513_combined_OSA.csv")

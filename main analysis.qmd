@@ -1,8 +1,8 @@
 ---
-title: "Bar Test Report - Sivers Lot #P10513"
-subtitle: "phase 3 C-band laser (EEVEE)"
+title: "Sivers Bar Test Report: Lot P10513"
+subtitle: "EEVEE C-band Wafer 71634-10"
 author: "Brian Pile"
-date: "2024-07-02"
+date: "2024-07-03"
 format:
   html:
     toc: true
@@ -83,6 +83,7 @@ circ_dat = circleFun(diameter = 75000)
 # df_osa = data.table::fread(file = "./data/P10515_combined_OSA.csv")
 
 df_summary = data.table::fread(file = "./data/P10513_summary.csv") |> 
+  as_tibble() |> 
   mutate(Pf3_cal = Pf3 * CAL_FACTOR_Pf3, .after = Pf3) |> 
   mutate(Lp3_cal = Lp3 + CAL_OFFSET_Lp3, .after = Lp3) |> 
   mutate(
@@ -90,7 +91,31 @@ df_summary = data.table::fread(file = "./data/P10513_summary.csv") |>
     barID = as.character(barID)
   ) |>
   decode_eevee()
+
+df_summary = df_summary |> filter(!is.na(Lp3))
 ```
+
+# Overview
+
+## Process History
+
+| Process                                             | Supplier | Comment                                          |
+|--------------------------------|-------------|---------------------------|
+| Epi wafer and fabrication up until z-stop           | Almae    | Phase-3 lot of three wafers                      |
+| Wafer thinning and patterned backside metallization | Sivers   | Used Sivers own labeling characters and sequence |
+| Cleaving, facet coating, and bar testing            | Sivers   | non-hermetic coatings                            |
+
+## Known Issues
+
+The following items regarding the wafer history should be noted.
+
+1.  An oversight in the EEVEE mask design caused poor cleaving quality. Thick p-metal is located in the cleave streets resulting in irregular facets and also metal wrapping over the die edge into the facet region. This oversight caused significant processing challenges at both Almae and Sivers resulting in delays and unknown yield and reliability consequences. The mask has been revised to correct the issue.
+
+2.  The wavelengths are blue-shifted from the design targets by about -3.5nm. This corresponds to a offset of approximately one channel in the intended 4-channel application. The impact to yield is that there are effectively no channel 4 devices available. A new bin for a channel 0 was created in order to harvest these die anyway.
+
+## Calibration
+
+The raw output power and wavelength data was calibrated based on previous comparison of POET CoC, Almae CoC, and Sivers bar test data. A calibration factor of `r CAL_FACTOR_Pf3` was applied to the output power at 400mA, and a calibration offset of `r CAL_OFFSET_Lp3`mW was added to the wavelength at 400mA. All analysis in this report is based on the calibrated data unless specifically noted otherwise.
 
 # Yield
 
@@ -98,28 +123,32 @@ df_summary = data.table::fread(file = "./data/P10513_summary.csv") |>
 #| label: yield-calculation
 
 # pass criteria
-Ith_max = 25
-Pf3_min = 80
-# Vf3_max = 2.
-Vf3_max = 2.0
+Ith_max = 25L
+Pf3_min = 80L
+# Vf3_max = 2.0
+Vf3_max = 2.5  # making exception because CoC voltage looked normal and this crushes the yield otherwise
 Vf3_min = 1.3
-SMSR3_min = 35
+SMSR3_min = 35L
 # Lp3_min = 1570.06
-Lp3_min = 1566.77 # assumes creating a CH0 is acceptable 
+Lp3_min = 1566.77 # assumes creating a CH0 is acceptable, normally this should be 1570.06
 Lp3_max = 1583.34
-kink_max = 30
+kink_max = 30L
 
 # pass/fail evaluation
 df_summary = df_summary |>
   mutate(
-    pf_Ith = case_when(
-      Ith1d <= Ith_max ~ TRUE,
-      .default = FALSE
-    ),
     pf_Pf3 = case_when(
       Pf3_cal >= Pf3_min ~ TRUE,
       .default = FALSE
     ),
+    pf_Ith = case_when(
+      Ith1d <= Ith_max ~ TRUE,
+      .default = FALSE
+    ),
+    # pf_Pf3 = case_when(
+    #   Pf3_cal >= Pf3_min ~ TRUE,
+    #   .default = FALSE
+    # ),
     pf_Vf3 = case_when(
       between(Vf3, Vf3_min, Vf3_max) ~ TRUE,
       .default = FALSE
@@ -146,12 +175,12 @@ df_summary = df_summary |>
 df_summary = df_summary |> 
   mutate(
     pf_code = case_when(
-      pf_Vf3   == FALSE ~ "Vf",
-      pf_Ith   == FALSE ~ "Ith",
       pf_Pf3   == FALSE ~ "Pf",
-      pf_kink  == FALSE ~ "kink",
+      pf_Ith   == FALSE ~ "Ith",
+      pf_Vf3   == FALSE ~ "Vf",
       pf_SMSR3 == FALSE ~ "SMSR",
       pf_Lp3   == FALSE ~ "Lp",
+      pf_kink  == FALSE ~ "kink",
       pf_final == TRUE ~ "PASS",
       .default = "?"
     )
@@ -188,8 +217,8 @@ df_yield = df_summary |>
     Lp3_fail_count = sum(!pf_Lp3),
     Lp3_yield_pct = round(100 * (1 - Lp3_fail_count/n), 1),
     fail_count = sum(!pf_final),
-    pass_count = sum(pf_final),
-    yield_pct = round(100 * (1 - fail_count/n), 1)
+    total_pass_count = sum(pf_final),
+    total_yield_pct = round(100 * (1 - fail_count/n), 1)
   )
 ```
 
@@ -200,72 +229,115 @@ df_yield = df_summary |>
 
 # yield summary table
 df_yield |> 
-  select(waferID, n, fail_count, pass_count, yield_pct) |> 
+  select(waferID, n, fail_count, total_pass_count, total_yield_pct) |> 
   gt() |> 
-  tab_header(title = "Yield Summary") |> 
+  tab_header(
+    title = "Yield Summary",
+    subtitle = "Lot P10513"
+  ) |> 
   tab_stubhead(label = "Lot ID") |> 
   cols_label(
     waferID = "Wafer ID",
     fail_count = "Fail Count",
-    pass_count = "Pass Count",
-    yield_pct = "Yield (%)"
+    total_pass_count = "Pass Count",
+    total_yield_pct = "Yield (%)"
+  ) |> 
+  tab_options(
+    table.width = pct(80)
   )
 ```
 
 ```{r}
-#| label: wavelength-yield
+#| label: channel-yield
 
 df_summary |> 
-  mutate(WL_bin = as.factor(WL_bin),
-         WL_bin = fct_relevel(WL_bin, "too low", "0", "1", "2", "3", "4", "too high")) |> 
-  filter(pf_final == TRUE) |> 
-  ggplot(aes(x = WL_bin)) +
-  geom_bar() +
-  geom_text(
-    aes(
-      y = after_stat(count),
-      label = after_stat(count)
-    ),
-    stat = "count",
-    vjust = -0.5
-  ) +
-  scale_x_discrete(drop = FALSE) +
-  labs(
-    title = "Yield Counts by Channel",
-    x = "Channel"
-  ) +
-  coord_cartesian(ylim = c(0, 2000))
+  filter(pf_final) |> 
+  summarize(
+    .by = c(waferID, WL_bin),
+    n = n()
+  ) |> 
+  filter(WL_bin %in% as.character(0:4)) |> 
+  arrange(WL_bin) |> 
+  pivot_wider(
+    names_from = WL_bin,
+    values_from = n,
+    names_prefix = "CH"
+  ) |> 
+  gt() |> 
+  tab_header(
+    title = "Yielded Die Per Channel",
+    subtitle = "Lot P10513"
+  ) |> 
+  cols_label(
+    waferID = "Wafer ID"
+  ) |> 
+  tab_options(
+    table.width = pct(80)
+  )
 ```
 
 ## pass criteria
 
-| no  | Parameter                   | Symbol | Unit | Minimum | Maximum | Condition       |
-|-----|----------------------|--------|------|----------|----------|--------------|
-| 1   | Threshold Current           | Ith    | mA   |         | 25      |                 |
-| 2   | Output Power                | Pf     | mW   | 80      |         | If=400mA        |
-| 3   | Forward Voltage             | Vf     | V    | 1.3     | 2.0     | If=400mA        |
-| 4   | Side Mode Suppression Ratio | SMSR   | dB   | 35      |         | If=400mA        |
-| 5   | Peak Wavelength             | Lp     | nm   | 1570.06 | 1583.34 | If=400mA        |
-| 6   | Kink Deviation              | Kink   | \%   |         | 30      | If=250 to 450mA |
-
-: Pass Criteria <br> Parameters measured at bar-level with pulsed injection current at 50C {#tbl-criteria .striped}
-
-
-## pass criteria tribble
-
 ```{r}
 pf_criteria = tribble(
-  ~no,  ~Parameter,                     ~Symbol,  ~Unit,   ~Minimum,     ~Maximum,  ~ Condition,
-  1,    "Threshold Current",            "Ith",    "mA",    NA,           Ith_max,   NA,
-  2,    "Output Power",                 "Pf",     "mW",    Pf3_min,      NA,        "If=400mA",
-  3,    "Forward Voltage",              "Vf",     "V",     Vf3_min,      Vf3_max,   "If=400mA",
-  4,    "Side Mode Suppression Ratio",  "SMSR",   "dB",    SMSR3_min,    NA,        "If=400mA",
+  ~no,  ~Parameter,                     ~Symbol,  ~Unit,   ~Minimum,     ~Maximum,
+  1,    "Output Power",                 "Pf",     "mW",    Pf3_min,      NA,
+  2,    "Threshold Current",            "Ith",    "mA",    NA,           Ith_max,
+  3,    "Forward Voltage",              "Vf",     "V",     Vf3_min,      Vf3_max,
+  4,    "Side Mode Suppression Ratio",  "SMSR",   "dB",    SMSR3_min,    NA,
+  5,    "Peak Wavelength",              "Lp",     "nm",    Lp3_min,      Lp3_max,
+  6,    "Kink Deviation",               "Kink",   "%",     NA,           kink_max
 )
 
-pf_criteria |> gt()
+pf_criteria |>
+  gt() |> 
+  tab_header(
+    title = "Pass Criteria",
+    subtitle = "L-I-V and spectrum are measured using pulsed and CW current, respectively."
+  ) |> 
+  sub_missing(
+    columns = everything(),
+    rows = everything(),
+    missing_text = ""
+  ) |> 
+  cols_width(
+    no ~ px(10),
+  ) |>
+  fmt_number(
+    rows = c(3, 5),
+    columns = -1,
+    decimals = 2,
+    use_seps = FALSE
+  ) |> 
+  tab_options(
+    table.width = pct(80)
+  )
 ```
 
+## pass rates
 
+```{r}
+#| label: pass-rates
+
+df_yield |> 
+  pivot_longer(-c(waferID, n)) |> 
+  filter(str_detect(name, "pct")) |> 
+  mutate(name = str_remove(name, "_yield_pct")) |> 
+  ggplot(aes(x = fct_reorder(name, value, .desc = TRUE), y = value)) +
+  geom_col() +
+  geom_text(
+    aes(label = paste0(round(value, 0), "%")),
+    vjust = -0.5
+  ) +
+  coord_cartesian(ylim = c(0, 100)) +
+  labs(
+    title = "Percent of Chips Passing by Criteria Type",
+    x = "Parameter",
+    y = "(%)"
+  )
+```
+
+## failure Pareto
 
 ```{r}
 #| label: failure-pareto
@@ -279,24 +351,25 @@ d = df_summary |>
 
 
 d |> 
-  # filter(pf_code != "PASS") |> 
+  filter(pf_code != "PASS") |>
   ggplot(aes(x = fct_reorder(pf_code, pcnt, .desc = TRUE), y = pcnt)) +
   geom_col() +
   geom_text(aes(label = paste0(round(pcnt), "%")), vjust = -0.5) +
-  coord_cartesian(ylim = c(0, 100)) +
+  coord_cartesian(ylim = c(0, 50)) +
   labs(
-    title = "Pass/Fail Breakdown",
-    subtitle = "Failures assigned sequentially according to Table 1. A device is failed for the first criteria\nnot passed.",
-    x = "Result",
-    y = "%"
+    title = "Percentage by First-Failed Criteria",
+    x = "Parameter",
+    y = "(%)"
   )
 ```
 
 ```{r}
 #| label: wl-bin-tally
 #| eval: false
+
 df_summary |> 
-  filter(pf_final == TRUE) |>
+  # filter(pf_final == TRUE) |>
+  filter(SMSR3 >= 35) |> 
   summarize(
     .by = WL_bin,
     n = n()
@@ -320,17 +393,19 @@ df_summary |>
 
 df_stats = df_summary |> 
   as_tibble() |> 
-  select(Ith1d, Pf3_cal, Vf3, SMSR3) |> 
+  select(Ith1d, Pf3_cal, Vf3, SMSR3, Lp3_cal, KINK) |> 
+  mutate(KINK = abs(KINK),
+         KINK = ifelse(KINK>10000, 10000, KINK)) |> 
   summarize(
-    `NA`       = across(c(Ith1d, Pf3_cal, Vf3, SMSR3), \(x) sum(is.na(x), na.rm = TRUE)),
-    Outliers   = across(c(Ith1d, Pf3_cal, Vf3, SMSR3), \(x) sum(!isnt_outlier_tukey(x, na.rm = TRUE), na.rm = TRUE)),
-    Min        = across(c(Ith1d, Pf3_cal, Vf3, SMSR3), \(x) min(x, na.rm = TRUE)),
-    Q1         = across(c(Ith1d, Pf3_cal, Vf3, SMSR3), \(x) quantile(x, probs = 0.25, na.rm = TRUE)),
-    Med        = across(c(Ith1d, Pf3_cal, Vf3, SMSR3), \(x) median(x, na.rm = TRUE)),
-    Avg        = across(c(Ith1d, Pf3_cal, Vf3, SMSR3), \(x) mean(x, na.rm = TRUE)),
-    Q3         = across(c(Ith1d, Pf3_cal, Vf3, SMSR3), \(x) quantile(x, probs = 0.75, na.rm = TRUE)),
-    Max        = across(c(Ith1d, Pf3_cal, Vf3, SMSR3), \(x) max(x, na.rm = TRUE)),
-    IQR        = across(c(Ith1d, Pf3_cal, Vf3, SMSR3), \(x) diff(quantile(x, probs = c(0.25, 0.75), na.rm = TRUE))),
+    `NA`       = across(c(Pf3_cal, Ith1d, Vf3, SMSR3, Lp3_cal, KINK), \(x) sum(is.na(x), na.rm = TRUE)),
+    Outliers   = across(c(Pf3_cal, Ith1d, Vf3, SMSR3, Lp3_cal, KINK), \(x) sum(!isnt_outlier_tukey(x, na.rm = TRUE), na.rm = TRUE)),
+    Min        = across(c(Pf3_cal, Ith1d, Vf3, SMSR3, Lp3_cal, KINK), \(x) min(x, na.rm = TRUE)),
+    Q1         = across(c(Pf3_cal, Ith1d, Vf3, SMSR3, Lp3_cal, KINK), \(x) quantile(x, probs = 0.25, na.rm = TRUE)),
+    Med        = across(c(Pf3_cal, Ith1d, Vf3, SMSR3, Lp3_cal, KINK), \(x) median(x, na.rm = TRUE)),
+    Avg        = across(c(Pf3_cal, Ith1d, Vf3, SMSR3, Lp3_cal, KINK), \(x) mean(x, na.rm = TRUE)),
+    Q3         = across(c(Pf3_cal, Ith1d, Vf3, SMSR3, Lp3_cal, KINK), \(x) quantile(x, probs = 0.75, na.rm = TRUE)),
+    Max        = across(c(Pf3_cal, Ith1d, Vf3, SMSR3, Lp3_cal, KINK), \(x) max(x, na.rm = TRUE)),
+    IQR        = across(c(Pf3_cal, Ith1d, Vf3, SMSR3, Lp3_cal, KINK), \(x) diff(quantile(x, probs = c(0.25, 0.75), na.rm = TRUE))),
   ) |> 
   unnest(everything(), names_sep = "-") |> 
   pivot_longer(
@@ -349,54 +424,35 @@ df_stats |>
   fmt_number(
     decimals = 0
   ) |> 
+  text_replace(
+    pattern = "Ith1d", replacement = "Threshold Current (mA)", locations = cells_stub()
+  ) |> 
+  text_replace(
+    pattern = "Pf3_cal", replacement = "Output Power (mW)", locations = cells_stub()
+  ) |> 
+  text_replace(
+    pattern = "Vf3", replacement = "Forward Voltage, (V)", locations = cells_stub()
+  ) |> 
+  text_replace(
+    pattern = "SMSR3", replacement = "Side Mode Suppression Ratio (dB)", locations = cells_stub()
+  ) |> 
+  text_replace(
+    pattern = "Lp3_cal", replacement = "Peak Wavelength (nm)", locations = cells_stub()
+  ) |> 
+  text_replace(
+    pattern = "KINK", replacement = "Kink Deviation (%)", locations = cells_stub()
+  ) |> 
   fmt_number(
-    rows = "Vf3",
-    columns = !c("NA", "Outliers"),
-    decimals = 2
+    rows = everything(),
+    columns = everything(),
+    sep_mark = "",
+    decimals = 0
   ) |> 
   fmt_number(
-    rows = "Ith1d",
-    columns = !c("NA", "Outliers"),
-    decimals = 1
-  ) |> 
-  text_replace(
-    pattern = "Ith1d", replacement = "Threshold Current, mA", locations = cells_stub()
-  ) |> 
-  text_replace(
-    pattern = "Pf3_cal", replacement = "Output Power, mW", locations = cells_stub()
-  ) |> 
-  text_replace(
-    pattern = "Vf3", replacement = "Forward Voltage, V", locations = cells_stub()
-  ) |> 
-  text_replace(
-    pattern = "SMSR3", replacement = "Side Mode Suppression Ratio, dB", locations = cells_stub()
+    rows = 3,
+    columns = -c(1:3),
+    sep_mark = ""
   )
-```
-
-## Ith
-
-```{r}
-#| label: ith
-#| eval: true
-
-df_summary |> 
-  # filter(Pf3_cal > 1) |> 
-  ggplot(aes(x = Ith1d)) +
-  stat_ecdf(aes(x = Ith1d), pad = FALSE, na.rm = TRUE) +
-  geom_vline(xintercept = Ith_max, color = "red") +
-  annotate(
-    geom = "segment", x = Ith_max, xend = Ith_max - 3, y = 0, yend = 0,
-    color = "red", arrow = arrow(length = unit(.02, "npc"), , type = "closed")
-  ) +
-  coord_cartesian(xlim = c(0, 50)) +
-  scale_x_continuous(breaks = seq(0, 200, 10)) +
-  labs(
-    title = "Threshold Current, 50C",
-    subtitle = "panels by wafer ID",
-    x = "Ith (mA)",
-    # color = "Lot ID"
-  ) +
-  facet_wrap( ~ waferID)
 ```
 
 ## Pf
@@ -425,6 +481,32 @@ df_summary |>
   facet_wrap( ~ waferID)
 ```
 
+## Ith
+
+```{r}
+#| label: ith
+#| eval: true
+
+df_summary |> 
+  # filter(Pf3_cal > 1) |> 
+  ggplot(aes(x = Ith1d)) +
+  stat_ecdf(aes(x = Ith1d), pad = FALSE, na.rm = TRUE) +
+  geom_vline(xintercept = Ith_max, color = "red") +
+  annotate(
+    geom = "segment", x = Ith_max, xend = Ith_max - 3, y = 0, yend = 0,
+    color = "red", arrow = arrow(length = unit(.02, "npc"), , type = "closed")
+  ) +
+  coord_cartesian(xlim = c(0, 50)) +
+  scale_x_continuous(breaks = seq(0, 200, 10)) +
+  labs(
+    title = "Threshold Current, 50C",
+    subtitle = "panels by wafer ID",
+    x = "Ith (mA)",
+    # color = "Lot ID"
+  ) +
+  facet_wrap( ~ waferID)
+```
+
 ## Vf
 
 ```{r}
@@ -437,7 +519,7 @@ df_summary |>
   geom_vline(xintercept = c(Vf3_min, Vf3_max), color = "red") +
   annotate(
     geom = "segment", x = Vf3_max, xend = Vf3_min, y = 0, yend = 0,
-    color = "red", arrow = arrow(length = unit(.02, "npc"), type = "closed")
+    color = "red", arrow = arrow(length = unit(.02, "npc"), type = "closed", ends = "both")
   ) +
   # annotate(
   #   geom = "segment", x = Vf3_min, xend = Vf3_min + 0.1, y = 0, yend = 0,
@@ -454,11 +536,14 @@ df_summary |>
   facet_wrap( ~ waferID)
 ```
 
+```{=html}
+<!--
 ## Rs
-
+-->
+```
 ```{r}
 #| label: rs3
-#| eval: true
+#| eval: false
 
 df_summary |> 
   ggplot(aes(x = Rs3)) +
@@ -478,6 +563,29 @@ df_summary |>
     title = "Series Resistance Distribution, 400mA, 50C",
     subtitle = "panels by wafer ID",
     x = "Rs (Ω)",
+    color = "Lot ID"
+  ) +
+  facet_wrap( ~ waferID)
+```
+
+## SMSR
+
+```{r}
+#| label: SMSR3
+#| eval: true
+
+df_summary |> 
+  ggplot(aes(x = SMSR3)) +
+  stat_ecdf(pad = FALSE, na.rm = TRUE) +
+  geom_vline(xintercept = 35, color = "red") +
+  annotate(
+    geom = "segment", x = SMSR3_min, xend = SMSR3_min + 2.5, y = 0, yend = 0,
+    color = "red", arrow = arrow(length = unit(.02, "npc"), type = "closed")
+  ) +
+  labs(
+    title = "Side Mode Suppresion Ratio, 400mA, 50C",
+    subtitle = "panels by wafer ID",
+    x = "SMSR (dB)",
     color = "Lot ID"
   ) +
   facet_wrap( ~ waferID)
@@ -511,29 +619,6 @@ df_summary |>
     caption = paste("cal offset of", CAL_OFFSET_Lp3, "nm applied to Lp3", "\nscreened for SMSR > 35dB"),
     x = "Lp (nm)",
     fill = "Channel"
-  ) +
-  facet_wrap( ~ waferID)
-```
-
-## SMSR
-
-```{r}
-#| label: SMSR3
-#| eval: true
-
-df_summary |> 
-  ggplot(aes(x = SMSR3)) +
-  stat_ecdf(pad = FALSE, na.rm = TRUE) +
-  geom_vline(xintercept = 35, color = "red") +
-  annotate(
-    geom = "segment", x = SMSR3_min, xend = SMSR3_min + 2.5, y = 0, yend = 0,
-    color = "red", arrow = arrow(length = unit(.02, "npc"), type = "closed")
-  ) +
-  labs(
-    title = "Side Mode Suppresion Ratio, 400mA, 50C",
-    subtitle = "panels by wafer ID",
-    x = "SMSR (dB)",
-    color = "Lot ID"
   ) +
   facet_wrap( ~ waferID)
 ```
@@ -584,11 +669,11 @@ df_summary |>
   ) +
   coord_equal(xlim = c(-75000/2, 75000/2)) +
   facet_wrap(~ waferID) +
-  scale_fill_viridis_d(direction = 1, option = "plasma") +
+  # scale_fill_viridis_d(direction = 1, option = "plasma") +
   theme(panel.grid = element_blank()) +
   labs(
     title = "Map of Tested Chips",
-    # subtitle = "panels by wafer ID",
+    subtitle = "panels by wafer ID",
     fill = "Lot ID"
   )
 ```
@@ -600,7 +685,7 @@ df_summary |>
 
 df_summary |> 
   ggplot(aes(xmin = die_x_coord, xmax = die_x_coord + DIE_WIDTH, ymin = die_y_coord, ymax = die_y_coord + DIE_LENGTH)) +
-  geom_rect(aes(fill = as.factor(cellID)), color = "black", linewidth = 0.05, na.rm = TRUE) +
+  geom_rect(aes(fill = as.factor(cellID)), color = "white", linewidth = 0, na.rm = TRUE) +
   geom_path(
     data = circ_dat,
     mapping = aes(x = x, y = y),
@@ -609,7 +694,8 @@ df_summary |>
   ) +
   coord_equal(xlim = c(-75000/2, 75000/2)) +
   facet_wrap( ~ waferID) +
-  scale_fill_viridis_d(direction = 1, option = "plasma") +
+  # scale_fill_viridis_d(direction = 1, option = "plasma") +
+  # scale_fill_viridis_d() +
   theme(
     panel.grid = element_blank()
   ) +
