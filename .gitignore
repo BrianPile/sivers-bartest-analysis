@@ -5,9 +5,6 @@
 data
 .DS_Store
 main analysis.html
-config_file.R
 _quarto.yml
-main analysis_files
-main-analysis_files
-
 /.quarto/
+config_info.R
