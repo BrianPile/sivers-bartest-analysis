@@ -1,6 +1,6 @@
 ---
-title: "Sivers Bar Test Report: Lot P10513"
-subtitle: "EEVEE C-band Wafer 71634-10"
+title: "Sivers Bar Test Report: Lot P10515"
+subtitle: "EEVEE C-band Wafer 71636-30"
 author: "Brian Pile"
 date: "2024-07-03"
 format:
@@ -28,21 +28,15 @@ theme_set(theme_bw())
 # source EEVEE mask decoder
 source("/Users/brianpile/POET Technologies Dropbox/Brian Pile/Brian Pile/R_scripts/POET LD maskset decoders/decode_eevee.R")
 
+# source config file
+source("./config_file.R")
+
 # calibration constants
+# TODO: put calibration constants inside config file?
 CAL_FACTOR_Pf3 = 0.7
 CAL_OFFSET_Lp3 = -3.578
 
-# wavelength spec information
-# df_wl_info = tribble(
-#   ~CH, ~WL,     
-#   1,   1572.06,
-#   2,   1575.37,
-#   3,   1578.69,
-#   4,   1582.02
-# ) |> 
-#   mutate(WL_min = WL - 1.655,
-#          WL_max = WL + 1.655)
-
+# ELS wavelength plan
 df_wl_info = tribble(
   ~CH,     ~WL_min,     ~WL_max,
   0,       1566.77,     1570.0599999,
@@ -52,10 +46,11 @@ df_wl_info = tribble(
   4,       1580.02,     1583.34
 )
 
-# parameters
+# die geometry
 DIE_WIDTH = 250
 DIE_LENGTH = 950
 
+# data for a circle
 circleFun <- function(center = c(0,0), diameter = 1, npoints = 100){
     r = diameter / 2
     tt <- seq(0,2*pi,length.out = npoints)
@@ -82,7 +77,7 @@ circ_dat = circleFun(diameter = 75000)
 
 # df_osa = data.table::fread(file = "./data/P10515_combined_OSA.csv")
 
-df_summary = data.table::fread(file = "./data/P10513_summary.csv") |> 
+df_summary = data.table::fread(file = paste0("./data/", config_info$lotID, "_summary.csv")) |> 
   as_tibble() |> 
   mutate(Pf3_cal = Pf3 * CAL_FACTOR_Pf3, .after = Pf3) |> 
   mutate(Lp3_cal = Lp3 + CAL_OFFSET_Lp3, .after = Lp3) |> 
@@ -92,7 +87,7 @@ df_summary = data.table::fread(file = "./data/P10513_summary.csv") |>
   ) |>
   decode_eevee()
 
-df_summary = df_summary |> filter(!is.na(Lp3))
+df_summary = df_summary |> filter(!is.na(Lp3)) # TODO: FIGURE OUT WHY this is even needed, why is NA happening???
 ```
 
 # Overview
@@ -123,10 +118,11 @@ The raw output power and wavelength data was calibrated based on previous compar
 #| label: yield-calculation
 
 # pass criteria
+# TODO: put pass criteria inside config file?
 Ith_max = 25L
 Pf3_min = 80L
-# Vf3_max = 2.0
-Vf3_max = 2.5  # making exception because CoC voltage looked normal and this crushes the yield otherwise
+Vf3_max = 2.0
+# Vf3_max = 2.5  # making exception because CoC voltage looked normal and this crushes the yield otherwise
 Vf3_min = 1.3
 SMSR3_min = 35L
 # Lp3_min = 1570.06
@@ -233,7 +229,7 @@ df_yield |>
   gt() |> 
   tab_header(
     title = "Yield Summary",
-    subtitle = "Lot P10513"
+    subtitle = paste("Lot", config_info$lotID)
   ) |> 
   tab_stubhead(label = "Lot ID") |> 
   cols_label(
@@ -266,7 +262,7 @@ df_summary |>
   gt() |> 
   tab_header(
     title = "Yielded Die Per Channel",
-    subtitle = "Lot P10513"
+    subtitle = paste("Lot", config_info$lotID)
   ) |> 
   cols_label(
     waferID = "Wafer ID"
