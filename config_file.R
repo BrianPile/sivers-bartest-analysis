@@ -9,4 +9,3 @@ config_info = list(
     "/Users/brianpile/POET Technologies Dropbox/Brian Pile/1) Test/1.4) Outsource (dropbox)/Sivers/P10515/P10515-7/P10515-7_755&756_82A_GP04_dat.xls"
   )
 )
-
