@@ -62,7 +62,6 @@ circ_dat = circleFun(diameter = 75000)
 #     remove = FALSE
 #   )
 
-
 # df_osa = data.table::fread(file = "./data/P10515_combined_OSA.csv")
 
 df_summary = data.table::fread(file = paste0("./data/", config_info$lotID, "_summary.csv")) |> 
@@ -75,7 +74,7 @@ df_summary = data.table::fread(file = paste0("./data/", config_info$lotID, "_sum
   ) |>
   decode_eevee()
 
-df_summary = df_summary |> filter(!is.na(Lp3)) # TODO: FIGURE OUT WHY this is even needed, why is NA happening???
+# df_summary = df_summary |> filter(!is.na(Lp3)) # TODO: FIGURE OUT WHY this is even needed, why is NA happening???
 ```
 
 # Overview
@@ -109,8 +108,8 @@ The raw output power and wavelength data was calibrated based on previous compar
 # TODO: put pass criteria inside config file?
 Ith_max = 25L
 Pf3_min = 80L
-Vf3_max = 2.0
-# Vf3_max = 2.5  # making exception because CoC voltage looked normal and this crushes the yield otherwise
+# Vf3_max = 2.0
+Vf3_max = 2.5  # making exception because CoC voltage looked normal and this crushes the yield otherwise
 Vf3_min = 1.3
 SMSR3_min = 35L
 # Lp3_min = 1570.06
@@ -669,7 +668,7 @@ df_summary |>
 
 df_summary |> 
   ggplot(aes(xmin = die_x_coord, xmax = die_x_coord + DIE_WIDTH, ymin = die_y_coord, ymax = die_y_coord + DIE_LENGTH)) +
-  geom_rect(aes(fill = as.factor(cellID)), color = "white", linewidth = 0, na.rm = TRUE) +
+  geom_rect(aes(fill = as.factor(cellID)), color = "white", linewidth = 0, na.rm = FALSE) +
   geom_path(
     data = circ_dat,
     mapping = aes(x = x, y = y),
@@ -734,7 +733,7 @@ df_summary |>
 ```{r}
 df_summary |> 
   ggplot(aes(xmin = die_x_coord, xmax = die_x_coord + DIE_WIDTH, ymin = die_y_coord, ymax = die_y_coord + DIE_LENGTH)) +
-  geom_rect(aes(fill = Vf3),color = "white",linewidth = 0,na.rm = TRUE) +
+  geom_rect(aes(fill = Vf3), color = "white",linewidth = 0) +
   geom_path(
     data = circ_dat,
     mapping = aes(x = x, y = y),
@@ -751,9 +750,9 @@ df_summary |>
 
 ```{r}
 df_summary |> 
-  filter(SMSR3 > 35) |> 
+  filter(SMSR3 > 35) |>
   ggplot(aes(xmin = die_x_coord, xmax = die_x_coord + DIE_WIDTH, ymin = die_y_coord, ymax = die_y_coord + DIE_LENGTH)) +
-  geom_rect(aes(fill = Lp3_cal - CWL),color = "white",linewidth = 0,na.rm = TRUE) +
+  geom_rect(aes(fill = Lp3_cal - CWL), color = "white", linewidth = 0) +
   geom_path(
     data = circ_dat,
     mapping = aes(x = x, y = y),
@@ -770,10 +769,12 @@ df_summary |>
 ## SMSR
 
 ```{r}
+#| warning: true
+
 df_summary |> 
-  # filter(SMSR3 > 20) |> 
+  # filter(!is.na(SMSR3)) |>
   ggplot(aes(xmin = die_x_coord, xmax = die_x_coord + DIE_WIDTH, ymin = die_y_coord, ymax = die_y_coord + DIE_LENGTH)) +
-  geom_rect(aes(fill = SMSR3),color = "white",linewidth = 0,na.rm = TRUE) +
+  geom_rect(aes(fill = SMSR3), color = "white", linewidth = 0, na.rm = FALSE) +
   geom_path(
     data = circ_dat,
     mapping = aes(x = x, y = y),

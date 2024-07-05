@@ -8,3 +8,6 @@ main analysis.html
 _quarto.yml
 /.quarto/
 config_info.R
+special_file_investigation.R
+sivers_data_wrangling - chunker - single osa sheet.R
+dev summarization - chunker - single osa sheet.R
