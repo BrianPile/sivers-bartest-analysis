@@ -276,8 +276,7 @@ pf_criteria = tribble(
 pf_criteria |>
   gt() |> 
   tab_header(
-    title = "Pass Criteria",
-    subtitle = "L-I-V and spectrum are measured using pulsed and CW current, respectively."
+    title = "Pass Criteria"
   ) |> 
   sub_missing(
     columns = everything(),
@@ -295,6 +294,12 @@ pf_criteria |>
   ) |> 
   tab_options(
     table.width = pct(80)
+  ) |> 
+  tab_source_note(
+    source_note = "L-I-V and spectrum are measured using pulsed and CW current, respectively"
+  ) |> 
+  tab_source_note(
+    source_note = "parameters are taken at 400mA, 50C"
   )
 ```
 
