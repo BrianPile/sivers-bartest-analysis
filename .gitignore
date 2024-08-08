@@ -8,3 +8,4 @@ main analysis.html
 _quarto.yml
 /.quarto/
 config_info.R
+wavelength binning.R
