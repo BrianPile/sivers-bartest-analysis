@@ -9,9 +9,7 @@ _quarto.yml
 /.quarto/
 config_info.R
 wavelength binning.R
-
 dev summarization - chunker - single osa sheet.R
-
 special_file_investigation.R
-
 sivers_data_wrangling - chunker - single osa sheet.R
+sivers bar pick list for singulation tests.R
