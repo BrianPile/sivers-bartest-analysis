@@ -3,12 +3,10 @@ library(readxl)
 library(devparext)
 rm(list = ls())
 
-# TODO: make a config file with the Almae wafer no and Sivers lot ID in it
-
 # source the EEVEE mask decoder and helper functions
 source("/Users/brianpile/POET Technologies Dropbox/Brian Pile/Brian Pile/R_scripts/POET LD maskset decoders/decode_eevee.R")
 source("./config_info.R")
-# 
+
 # input_data_path = "/Users/brianpile/POET Technologies Dropbox/Brian Pile/1) Test/1.4) Outsource (dropbox)/Sivers/P10515"
 file_list = list.files(path = config_info$input_data_path,
                        full.names = TRUE,
