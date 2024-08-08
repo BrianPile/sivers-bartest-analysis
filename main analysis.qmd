@@ -24,17 +24,6 @@ source("./config_info.R")
 CAL_FACTOR_Pf3 = 0.7
 CAL_OFFSET_Lp3 = -3.578
 
-# ELS wavelength plan
-# TODO: can use cut function instead to do this?
-df_wl_info = tribble(
-  ~CH,     ~WL_min,     ~WL_max,
-  0,       1567.13,     1570.4199999,
-  1,       1570.42,     1573.7099999,
-  2,       1573.71,     1577.0299999,
-  3,       1577.03,     1580.3499999,
-  4,       1580.35,     1583.69
-)
-
 # die geometry
 DIE_WIDTH = 250
 DIE_LENGTH = 950
@@ -77,6 +66,55 @@ df_summary = data.table::fread(file = paste0("./data/", config_info$lotID, "_sum
 
 df_summary = df_summary |> filter(!is.na(Lp3)) # TODO: FIGURE OUT WHY this is even needed, why is NA happening???
 ```
+
+```{r}
+#| label: wavelength-binning
+
+# ELS wavelength plan
+# TODO: can use cut function instead to do this?
+df_wl_info = tribble(
+  ~CH,     ~WL_min,     ~WL_max,
+  0,       1567.13,     1570.4199999,
+  1,       1570.42,     1573.7099999,
+  2,       1573.71,     1577.0299999,
+  3,       1577.03,     1580.3499999,
+  4,       1580.35,     1583.69
+)
+
+# coarse wavelength binning into "channels"
+df_summary = df_summary |> 
+  mutate(WL_bin = case_when(
+    Lp3_cal < df_wl_info[[1, "WL_min"]] ~ "too low",
+    between(Lp3_cal, df_wl_info[[1, "WL_min"]], df_wl_info[[1, "WL_max"]]) ~ "0",
+    between(Lp3_cal, df_wl_info[[2, "WL_min"]], df_wl_info[[2, "WL_max"]]) ~ "1",
+    between(Lp3_cal, df_wl_info[[3, "WL_min"]], df_wl_info[[3, "WL_max"]]) ~ "2",
+    between(Lp3_cal, df_wl_info[[4, "WL_min"]], df_wl_info[[4, "WL_max"]]) ~ "3",
+    between(Lp3_cal, df_wl_info[[5, "WL_min"]], df_wl_info[[5, "WL_max"]]) ~ "4",
+    Lp3_cal > df_wl_info[[4, "WL_max"]] ~ "too high",
+    .default = NA
+  ))
+
+# fine wavelength binning into "sub bins"
+c = 299792458 # speed of light (m/s)
+n_bins = 7 # in order to have bin width in nm less than the channel spacing accuracy (+/- 0.5nm)
+f_max = 191300 # GHz
+f_min = 189300 # GHz
+f_spacing = 400 # GHz
+f_binwidth = f_spacing / n_bins
+f_bin_boundaries = seq(f_min, f_max, f_binwidth)
+wl_bin_boundaries = c/f_bin_boundaries
+
+df_summary = df_summary |> 
+  mutate(
+    wl_sub_bin = cut(
+      x = Lp3_cal,
+      breaks = wl_bin_boundaries,
+      labels = FALSE,
+      include.lowest = TRUE
+    )
+  )
+```
+
 
 # Overview
 
@@ -169,19 +207,6 @@ df_summary = df_summary |>
       .default = "?"
     )
   )
-
-# wavelength binning
-df_summary = df_summary |> 
-  mutate(WL_bin = case_when(
-    Lp3_cal < df_wl_info[[1, "WL_min"]] ~ "too low",
-    between(Lp3_cal, df_wl_info[[1, "WL_min"]], df_wl_info[[1, "WL_max"]]) ~ "0",
-    between(Lp3_cal, df_wl_info[[2, "WL_min"]], df_wl_info[[2, "WL_max"]]) ~ "1",
-    between(Lp3_cal, df_wl_info[[3, "WL_min"]], df_wl_info[[3, "WL_max"]]) ~ "2",
-    between(Lp3_cal, df_wl_info[[4, "WL_min"]], df_wl_info[[4, "WL_max"]]) ~ "3",
-    between(Lp3_cal, df_wl_info[[5, "WL_min"]], df_wl_info[[5, "WL_max"]]) ~ "4",
-    Lp3_cal > df_wl_info[[4, "WL_max"]] ~ "too high",
-    .default = NA
-  ))
 
 # calculate individual parameter yields
 df_yield = df_summary |> 
