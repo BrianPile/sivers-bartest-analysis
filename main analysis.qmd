@@ -75,7 +75,7 @@ df_summary = data.table::fread(file = paste0("./data/", config_info$lotID, "_sum
   ) |>
   decode_eevee()
 
-# df_summary = df_summary |> filter(!is.na(Lp3)) # TODO: FIGURE OUT WHY this is even needed, why is NA happening???
+df_summary = df_summary |> filter(!is.na(Lp3)) # TODO: FIGURE OUT WHY this is even needed, why is NA happening???
 ```
 
 # Overview
