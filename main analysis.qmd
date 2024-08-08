@@ -720,6 +720,31 @@ df_summary |>
   guides(fill=guide_legend(ncol=2))
 ```
 
+## Pass / Fail
+
+```{r}
+#| label: map-pf
+
+df_summary |> 
+  ggplot(aes(xmin = die_x_coord, xmax = die_x_coord + DIE_WIDTH, ymin = die_y_coord, ymax = die_y_coord + DIE_LENGTH)) +
+  geom_rect(aes(fill = pf_final), color = "white", linewidth = 0, na.rm = TRUE) +
+  geom_path(
+    data = circ_dat,
+    mapping = aes(x = x, y = y),
+    inherit.aes = FALSE,
+    color = "gray"
+  ) +
+  coord_equal(xlim = c(-75000/2, 75000/2)) +
+  facet_wrap(~ waferID) +
+  # scale_fill_viridis_d(direction = 1, option = "plasma") +
+  theme(panel.grid = element_blank()) +
+  labs(
+    title = "Map PF Result",
+    subtitle = "panels by wafer ID",
+    fill = "PF Final"
+  )
+```
+
 ## Ith
 
 ```{r}
