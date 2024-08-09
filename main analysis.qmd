@@ -382,19 +382,19 @@ d |>
 #| eval: false
 
 df_summary |> 
-  # filter(pf_final == TRUE) |>
+  filter(pf_final == TRUE) |>
   filter(SMSR3 >= 35) |> 
   summarize(
-    .by = WL_bin,
+    .by = c(WL_bin, wl_sub_bin),
     n = n()
   ) |> 
-  ggplot(aes(x = WL_bin, y = n)) +
+  ggplot(aes(x = wl_sub_bin, y = n, fill = WL_bin)) +
   geom_col() +
-  geom_text(aes(label = n), vjust = -0.5) +
-  coord_cartesian(ylim = c(0, 2000)) +
+  geom_text(aes(label = n), vjust = -0.5, size = 2) +
+  # coord_cartesian(ylim = c(0, 3000)) +
   labs(
     title = "Wavelength Bin Counts",
-    x = "Channel"
+    x = "sub bin"
   )
 ```
 
