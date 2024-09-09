@@ -406,30 +406,26 @@ df_summary |>
 #| label: summary-stats
 
 df_stats = df_summary |> 
-  as_tibble() |> 
+  # filter(pf_final == TRUE) |>
   select(Ith1d, Pf3_cal, Vf3, SMSR3, Lp3_cal, KINK) |> 
   mutate(KINK = abs(KINK),
-         KINK = ifelse(KINK>10000, 10000, KINK)) |> 
-  summarize(
-    `NA`       = across(c(Pf3_cal, Ith1d, Vf3, SMSR3, Lp3_cal, KINK), \(x) sum(is.na(x), na.rm = TRUE)),
-    Outliers   = across(c(Pf3_cal, Ith1d, Vf3, SMSR3, Lp3_cal, KINK), \(x) sum(!isnt_outlier_tukey(x, na.rm = TRUE), na.rm = TRUE)),
-    Min        = across(c(Pf3_cal, Ith1d, Vf3, SMSR3, Lp3_cal, KINK), \(x) min(x, na.rm = TRUE)),
-    Q1         = across(c(Pf3_cal, Ith1d, Vf3, SMSR3, Lp3_cal, KINK), \(x) quantile(x, probs = 0.25, na.rm = TRUE)),
-    Med        = across(c(Pf3_cal, Ith1d, Vf3, SMSR3, Lp3_cal, KINK), \(x) median(x, na.rm = TRUE)),
-    Avg        = across(c(Pf3_cal, Ith1d, Vf3, SMSR3, Lp3_cal, KINK), \(x) mean(x, na.rm = TRUE)),
-    Q3         = across(c(Pf3_cal, Ith1d, Vf3, SMSR3, Lp3_cal, KINK), \(x) quantile(x, probs = 0.75, na.rm = TRUE)),
-    Max        = across(c(Pf3_cal, Ith1d, Vf3, SMSR3, Lp3_cal, KINK), \(x) max(x, na.rm = TRUE)),
-    IQR        = across(c(Pf3_cal, Ith1d, Vf3, SMSR3, Lp3_cal, KINK), \(x) diff(quantile(x, probs = c(0.25, 0.75), na.rm = TRUE))),
-  ) |> 
-  unnest(everything(), names_sep = "-") |> 
+         KINK = ifelse(KINK>10000, 10000, KINK)) |>
   pivot_longer(
-    cols = everything(),
-    names_to = c(".value", "Parameter"),
-    names_sep = "-",
-  )
+    cols = everything()
+  ) |> 
+  summarize(
+    .by = name,
+    `NA` = sum(is.na(value), na.rm = TRUE),
+    outliers = sum(!isnt_outlier_tukey(value, na.rm = TRUE), na.rm = TRUE),
+    mean = mean(value, na.rm = TRUE),
+    sd = sd(value, na.rm = TRUE),
+    quant = as_tibble_row(quantile(value, na.rm = TRUE))
+  ) |> 
+  unpack(quant) |> 
+  rename_with(\(x) paste0("p", str_remove(x, "%")), contains("%"))
 
 df_stats |> 
-  gt(rowname_col = "Parameter") |> 
+  gt(rowname_col = "name") |> 
   tab_header(
     title = "Summary Statistics",
     subtitle = paste0("N = ", nrow(df_summary), " devices")
