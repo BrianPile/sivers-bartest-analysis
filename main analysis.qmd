@@ -83,7 +83,7 @@ df_wl_info = tribble(
 
 # coarse wavelength binning into "channels"
 df_summary = df_summary |> 
-  mutate(WL_bin = case_when(
+  mutate(wl_bin = case_when(
     Lp3_cal < df_wl_info[[1, "WL_min"]] ~ "too low",
     between(Lp3_cal, df_wl_info[[1, "WL_min"]], df_wl_info[[1, "WL_max"]]) ~ "0",
     between(Lp3_cal, df_wl_info[[2, "WL_min"]], df_wl_info[[2, "WL_max"]]) ~ "1",
@@ -94,7 +94,7 @@ df_summary = df_summary |>
     .default = NA
   ))
 
-# fine wavelength binning into "sub bins"
+# fine wavelength binning into "sub bins" that span the entire wl range
 c = 299792458 # speed of light (m/s)
 n_bins = 7 # in order to have bin width in nm less than the channel spacing accuracy (+/- 0.5nm)
 f_max = 191300 # GHz
@@ -113,6 +113,14 @@ df_summary = df_summary |>
       include.lowest = TRUE
     )
   )
+
+# Assign bin_id, which is a value A-G, for bins inside a given channel. A set of
+# die then consists of one die per channel that have the same bin_id.
+df_summary = df_summary |> 
+  mutate(
+    bin_id = LETTERS[(wl_sub_bin-1) %% 7 + 1]
+  )
+
 ```
 
 
@@ -262,13 +270,13 @@ df_yield |>
 df_summary |> 
   filter(pf_final) |> 
   summarize(
-    .by = c(waferID, WL_bin),
+    .by = c(waferID, wl_bin),
     n = n()
   ) |> 
-  filter(WL_bin %in% as.character(0:4)) |> 
-  arrange(WL_bin) |> 
+  filter(wl_bin %in% as.character(0:4)) |> 
+  arrange(wl_bin) |> 
   pivot_wider(
-    names_from = WL_bin,
+    names_from = wl_bin,
     values_from = n,
     names_prefix = "CH"
   ) |> 
@@ -385,10 +393,10 @@ df_summary |>
   filter(pf_final == TRUE) |>
   filter(SMSR3 >= 35) |> 
   summarize(
-    .by = c(WL_bin, wl_sub_bin),
+    .by = c(wl_bin, wl_sub_bin, bin_id),
     n = n()
   ) |> 
-  ggplot(aes(x = wl_sub_bin, y = n, fill = WL_bin)) +
+  ggplot(aes(x = wl_sub_bin, y = n, fill = bin_id)) +
   geom_col() +
   geom_text(aes(label = n), vjust = -0.5, size = 2) +
   # coord_cartesian(ylim = c(0, 3000)) +

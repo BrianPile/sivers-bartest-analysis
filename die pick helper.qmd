@@ -1,0 +1,31 @@
+---
+title: "P10513 Die Pick"
+author: "Brian Pile"
+---
+
+```{r}
+#| label: setup
+library(tidyverse)
+```
+
+```{r}
+#| label: wl
+#| eval: false
+
+df_summary |> 
+  filter(pf_final == TRUE, wl_bin %in% 0:3) |>
+  filter(SMSR3 >= 35) |> 
+  summarize(
+    .by = c(wl_bin, wl_sub_bin, bin_id),
+    n = n()
+  ) |> 
+  ggplot(aes(x = wl_bin, y = n)) +
+  geom_col() +
+  geom_text(aes(label = n), vjust = -0.5, size = 2) +
+  # coord_cartesian(ylim = c(0, 3000)) +
+  labs(
+    title = "Wavelength Bin Counts"
+  ) +
+  facet_wrap(~ bin_id, nrow = 1)
+```
+
