@@ -83,7 +83,7 @@ df_wl_info = tribble(
 
 # coarse wavelength binning into "channels"
 df_summary = df_summary |> 
-  mutate(wl_bin = case_when(
+  mutate(ch_bin = case_when(
     Lp3_cal < df_wl_info[[1, "WL_min"]] ~ "too low",
     between(Lp3_cal, df_wl_info[[1, "WL_min"]], df_wl_info[[1, "WL_max"]]) ~ "0",
     between(Lp3_cal, df_wl_info[[2, "WL_min"]], df_wl_info[[2, "WL_max"]]) ~ "1",
@@ -270,13 +270,13 @@ df_yield |>
 df_summary |> 
   filter(pf_final) |> 
   summarize(
-    .by = c(waferID, wl_bin),
+    .by = c(waferID, ch_bin),
     n = n()
   ) |> 
-  filter(wl_bin %in% as.character(0:4)) |> 
-  arrange(wl_bin) |> 
+  filter(ch_bin %in% as.character(0:4)) |> 
+  arrange(ch_bin) |> 
   pivot_wider(
-    names_from = wl_bin,
+    names_from = ch_bin,
     values_from = n,
     names_prefix = "CH"
   ) |> 
@@ -393,7 +393,7 @@ df_summary |>
   filter(pf_final == TRUE) |>
   filter(SMSR3 >= 35) |> 
   summarize(
-    .by = c(wl_bin, wl_sub_bin, bin_id),
+    .by = c(ch_bin, wl_sub_bin, bin_id),
     n = n()
   ) |> 
   ggplot(aes(x = wl_sub_bin, y = n, fill = bin_id)) +
