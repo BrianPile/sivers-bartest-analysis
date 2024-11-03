@@ -396,7 +396,7 @@ df_summary |>
     .by = c(ch_bin, wl_sub_bin, bin_id),
     n = n()
   ) |> 
-  ggplot(aes(x = wl_sub_bin, y = n, fill = bin_id)) +
+  ggplot(aes(x = wl_sub_bin, y = n, fill = ch_bin)) +
   geom_col() +
   geom_text(aes(label = n), vjust = -0.5, size = 2) +
   # coord_cartesian(ylim = c(0, 3000)) +

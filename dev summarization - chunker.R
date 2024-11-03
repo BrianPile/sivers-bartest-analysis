@@ -16,8 +16,8 @@ df_liv = df_liv |>
   mutate(group_id = cur_group_id()) |> 
   ungroup()
 
-If_vec = c(200, 300, 400)*1e-3
-Ix_vec = c(100, 200, 300)*1e-3
+If_vec = c(50, 200, 400)*1e-3
+Ix_vec = c(20)*1e-3
 Pop_vec = c(80, 100)*1e-3 / 0.7
 
 chunk_len = 500
