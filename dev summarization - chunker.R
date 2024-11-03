@@ -132,7 +132,7 @@ df_summary_osa_wide = df_summary_osa %>%
 
 }  
   
-rm(df_osa, this_df_osa, df_osa_wide)
+rm(df_osa, this_df_osa, df_summary_osa_wide)
 
 #### COMBINE SUMMARIES ####
 df_summary_liv = data.table::fread(file = paste0("./data/", config_info$lotID, "_summary_liv.csv"))
