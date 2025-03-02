@@ -1,6 +1,10 @@
+# Combine Sivers bar-tester raw data into single csv files for further
+# processing Note: A .Renviron file has been created to set R_MAX_VSIZE = 20GB
+# so we don't reach the memory limit. This was set by experimenting on my 16GB
+# M4 Macbook Pro. Ref: https://www.carleton.edu/its/blog/dealing-with-a-vector-memory-exhausted-error-in-r/
+
 library(tidyverse)
 library(readxl)
-library(devparext)
 rm(list = ls())
 
 # source the EEVEE mask decoder and helper functions

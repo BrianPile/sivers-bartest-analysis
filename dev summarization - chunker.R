@@ -18,7 +18,7 @@ df_liv = df_liv |>
 
 If_vec = c(50, 200, 400)*1e-3
 Ix_vec = c(20)*1e-3
-Pop_vec = c(80, 100)*1e-3 / 0.7
+Pop_vec = c(80, 100)*1e-3 / 0.7 # 0.7 here is the power calibration factor determined by CoC test correlation
 
 chunk_len = 500
 idx1 = 1
