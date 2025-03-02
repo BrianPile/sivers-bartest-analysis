@@ -491,7 +491,7 @@ df_summary |>
   # coord_cartesian(ylim = c(0, 3000)) +
   labs(
     title = "Wavelength Bin Counts",
-    x = "sub bin"
+    # x = "sub bin"
   )
 
 ```
