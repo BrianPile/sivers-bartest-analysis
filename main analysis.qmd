@@ -261,6 +261,9 @@ df_yield |>
   ) |> 
   tab_options(
     table.width = pct(80)
+  ) |> 
+  tab_source_note(
+    source_note = "Edge die failures have not been removed from this analysis"
   )
 ```
 
@@ -290,7 +293,87 @@ df_summary |>
   ) |> 
   tab_options(
     table.width = pct(80)
+  ) |> 
+  tab_source_note(
+    source_note = "Edge die failures have not been removed from this analysis"
   )
+```
+
+```{r}
+#| label: wl-sets-yield
+
+# Calculate the number of chips in each sub bin, then for each wl group find the
+# channel with the minimum chip count. This value limits the number of die sets
+# that can be picked for that wl group.
+
+df_temp = df_summary |> 
+  filter(
+    pf_final,
+    ch_bin %in% c("0", "1", "2", "3")
+  ) |> 
+  summarize(
+    .by =   c(ch_bin, bin_id),
+    n = n()
+  ) |> 
+  arrange(bin_id) |> 
+  summarize(
+    .by = bin_id,
+    n_tot = sum(n),
+    n_set_ideal = n_tot %/% 4,
+    n_sets_actual = min(n)
+  )
+  
+df_temp |> 
+  rename("WL Set" = bin_id,
+         n = n_tot,
+         "Ideal Set Count" = n_set_ideal,
+         "Yielded Set Count" = n_sets_actual) |> 
+  gt() |> 
+  tab_header(
+    title = "Yielded Binned Die Sets",
+    subtitle = paste("Lot", config_info$lotID)
+  ) |> 
+  tab_source_note(
+    source_note = "The small quantity of CH4 die are ignored in this analysis"
+  ) |> 
+  tab_source_note(
+    source_note = "Sets are comprised of die from CH0, CH1, CH2, aand CH3"
+  )
+
+
+```
+
+```{r}
+#| label: binning-yield-summary
+
+df_temp |> 
+  summarize(
+    n = sum(n_tot),
+    n_matched     = sum(n_sets_actual) * 4,
+    n_unmatched   = n - n_matched,
+    n_sets_ideal  = n / 4,
+    n_sets_actual = sum(n_sets_actual),
+    binning_yield = round(100*n_matched/n, 1)
+  ) |> 
+  rename(
+    "Matched Die Count"   = n_matched,
+    "Unmatched Die Count" = n_unmatched,
+    "Ideal Set Count"     = n_sets_ideal,
+    "Actual Set Count"    = n_sets_actual,
+    "Binning Yield (%)"   = binning_yield
+  ) |> 
+  gt() |> 
+  tab_header(
+    title = "Binning Yield Summary",
+    subtitle = paste("Lot", config_info$lotID)
+  ) |> 
+  tab_source_note(
+    source_note = "The small quantity of CH4 die are ignored in this analysis"
+  ) |> 
+  tab_source_note(
+    source_note = "Sets are comprised of die from CH0, CH1, CH2, aand CH3"
+  )
+  
 ```
 
 ## pass criteria
@@ -387,11 +470,11 @@ d |>
 
 ```{r}
 #| label: wl-bin-tally
-#| eval: false
+#| eval: true
 
 df_summary |> 
   filter(pf_final == TRUE) |>
-  filter(SMSR3 >= 35) |> 
+  # filter(SMSR3 >= 35) |> 
   summarize(
     .by = c(ch_bin, wl_sub_bin, bin_id),
     n = n()
