@@ -40,7 +40,7 @@ while (TRUE) {
   
   df_summary_liv = this_df_liv %>%
     group_by(filename, lotID, SN, tempC) |> 
-    summarize_raw_liv_data(If_vec, Ix_vec, Pop_vec, n1_smooth = 5, n2_smooth = 5, n3_smooth = 5, Ik1 = 250, Ik2 = 450) %>%
+    summarize_raw_liv_data(If_vec, Ix_vec, Pop_vec, n1_smooth = 5, n2_smooth = 5, n3_smooth = 5, Ik1 = 250, Ik2 = 495) %>%
     ungroup()
   
   df_summary_liv = df_summary_liv %>%
