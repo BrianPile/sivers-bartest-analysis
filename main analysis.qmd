@@ -382,6 +382,8 @@ df_temp |>
 ## pass criteria
 
 ```{r}
+#| label: pass-criteria-table
+
 pf_criteria = tribble(
   ~no,  ~Parameter,                     ~Symbol,  ~Unit,   ~Minimum,     ~Maximum,
   1,    "Output Power",                 "Pf",     "mW",    Pf3_min,      NA,
@@ -609,7 +611,7 @@ df_summary |>
   coord_cartesian(xlim = c(0, 50)) +
   scale_x_continuous(breaks = seq(0, 200, 10)) +
   labs(
-    title = "Threshold Current, 50C",
+    title = "Threshold Current Distribution, 50C",
     subtitle = "panels by wafer ID",
     x = "Ith (mA)",
     # color = "Lot ID"
