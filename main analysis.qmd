@@ -237,6 +237,7 @@ df_yield = df_summary |>
     total_pass_count = sum(pf_final),
     total_yield_pct = round(100 * (1 - fail_count/n), 1)
   )
+
 ```
 
 ## summary
@@ -249,7 +250,7 @@ df_yield |>
   select(waferID, n, fail_count, total_pass_count, total_yield_pct) |> 
   gt() |> 
   tab_header(
-    title = "Yield Summary",
+    title = "Yield Summary: Chip-Level",
     subtitle = paste("Lot", config_info$lotID)
   ) |> 
   tab_stubhead(label = "Lot ID") |> 
@@ -261,7 +262,11 @@ df_yield |>
   ) |> 
   tab_options(
     table.width = pct(80)
+  ) |> 
+  tab_source_note(
+    source_note = "Edge die failures have not been removed from this analysis"
   )
+
 ```
 
 ```{r}
@@ -290,7 +295,87 @@ df_summary |>
   ) |> 
   tab_options(
     table.width = pct(80)
+  ) |> 
+  tab_source_note(
+    source_note = "Edge die failures have not been removed from this analysis"
   )
+
+```
+
+```{r}
+#| label: wl-sets-yield
+
+# Calculate the number of chips in each sub bin, then for each wl group find the
+# channel with the minimum chip count. This value limits the number of die sets
+# that can be picked for that wl group.
+
+df_temp = df_summary |> 
+  filter(
+    pf_final,
+    ch_bin %in% c("0", "1", "2", "3")
+  ) |> 
+  summarize(
+    .by =   c(ch_bin, bin_id),
+    n = n()
+  ) |> 
+  arrange(bin_id) |> 
+  summarize(
+    .by = bin_id,
+    n_tot = sum(n),
+    n_set_ideal = n_tot %/% 4,
+    n_sets_actual = min(n)
+  )
+  
+df_temp |> 
+  rename("WL Set" = bin_id,
+         n = n_tot,
+         "Ideal Set Count" = n_set_ideal,
+         "Yielded Set Count" = n_sets_actual) |> 
+  gt() |> 
+  tab_header(
+    title = "Binned Die Set Counts",
+    subtitle = paste("Lot", config_info$lotID)
+  ) |> 
+  tab_source_note(
+    source_note = "The small quantity of CH4 die are ignored in this analysis"
+  ) |> 
+  tab_source_note(
+    source_note = "Sets are comprised of die from CH0, CH1, CH2, aand CH3"
+  )
+
+```
+
+```{r}
+#| label: binning-yield-summary
+
+df_temp |> 
+  summarize(
+    n = sum(n_tot),
+    n_matched     = sum(n_sets_actual) * 4,
+    n_unmatched   = n - n_matched,
+    n_sets_ideal  = n / 4,
+    n_sets_actual = sum(n_sets_actual),
+    binning_yield = round(100*n_matched/n, 1)
+  ) |> 
+  rename(
+    "Matched Die Count"   = n_matched,
+    "Unmatched Die Count" = n_unmatched,
+    "Ideal Set Count"     = n_sets_ideal,
+    "Actual Set Count"    = n_sets_actual,
+    "Binning Yield (%)"   = binning_yield
+  ) |> 
+  gt() |> 
+  tab_header(
+    title = "Binning Yield Summary",
+    subtitle = paste("Lot", config_info$lotID)
+  ) |> 
+  tab_source_note(
+    source_note = "The small quantity of CH4 die are ignored in this analysis"
+  ) |> 
+  tab_source_note(
+    source_note = "Sets are comprised of die from CH0, CH1, CH2, aand CH3"
+  )
+  
 ```
 
 ## pass criteria
@@ -334,6 +419,7 @@ pf_criteria |>
   tab_source_note(
     source_note = "parameters are taken at 400mA, 50C"
   )
+
 ```
 
 ## pass rates
@@ -357,6 +443,7 @@ df_yield |>
     x = "Parameter",
     y = "(%)"
   )
+
 ```
 
 ## failure Pareto
@@ -383,15 +470,16 @@ d |>
     x = "Parameter",
     y = "(%)"
   )
+
 ```
 
 ```{r}
 #| label: wl-bin-tally
-#| eval: false
+#| eval: true
 
 df_summary |> 
   filter(pf_final == TRUE) |>
-  filter(SMSR3 >= 35) |> 
+  # filter(SMSR3 >= 35) |> 
   summarize(
     .by = c(ch_bin, wl_sub_bin, bin_id),
     n = n()
@@ -404,6 +492,7 @@ df_summary |>
     title = "Wavelength Bin Counts",
     x = "sub bin"
   )
+
 ```
 
 # Parametric Data
@@ -471,6 +560,7 @@ df_stats |>
     columns = -c(1:3),
     sep_mark = ""
   )
+
 ```
 
 ## Pf
@@ -497,6 +587,7 @@ df_summary |>
     caption = paste("cal factor of", CAL_FACTOR_Pf3, "applied to power")
   ) +
   facet_wrap( ~ waferID)
+
 ```
 
 ## Ith
@@ -523,6 +614,7 @@ df_summary |>
     # color = "Lot ID"
   ) +
   facet_wrap( ~ waferID)
+
 ```
 
 ## Vf
@@ -552,6 +644,7 @@ df_summary |>
     color = "Lot ID"
   ) +
   facet_wrap( ~ waferID)
+
 ```
 
 ```{=html}
@@ -584,6 +677,7 @@ df_summary |>
     color = "Lot ID"
   ) +
   facet_wrap( ~ waferID)
+
 ```
 
 ## SMSR
@@ -607,6 +701,7 @@ df_summary |>
     color = "Lot ID"
   ) +
   facet_wrap( ~ waferID)
+
 ```
 
 ## Peak WL
@@ -639,6 +734,7 @@ df_summary |>
     fill = "Channel"
   ) +
   facet_wrap( ~ waferID)
+
 ```
 
 ## Kink
@@ -667,6 +763,7 @@ df_summary |>
     color = "Bar ID"
   ) +
   facet_wrap( ~ waferID)
+
 ```
 
 # Wafer Maps
@@ -694,6 +791,7 @@ df_summary |>
     subtitle = "panels by wafer ID",
     fill = "Lot ID"
   )
+
 ```
 
 ## Cell ID
@@ -722,6 +820,7 @@ df_summary |>
     fill = "Cell ID"
   ) +
   guides(fill=guide_legend(ncol=2))
+
 ```
 
 ## Pass / Fail
@@ -747,6 +846,7 @@ df_summary |>
     subtitle = "panels by wafer ID",
     fill = "PF Final"
   )
+
 ```
 
 ## Ith
@@ -768,6 +868,7 @@ df_summary |>
   facet_wrap( ~ waferID) +
   scale_fill_viridis_c(direction = -1, option = "plasma", oob = scales::squish, limits = c(10, 20)) +
   labs(title = "Threshold Current, 50C")
+
 ```
 
 ## Pf
@@ -786,6 +887,7 @@ df_summary |>
   facet_wrap( ~ waferID) +
   scale_fill_viridis_c(direction = 1, option = "plasma") + #, oob = scales::squish, limits = c(80, 90)) +
   labs(title = "[Calibrated] Output Power, 400mA, 50C")
+
 ```
 
 ## Vf
@@ -804,6 +906,7 @@ df_summary |>
   facet_wrap( ~ waferID) +
   scale_fill_viridis_c(direction = 1, option = "plasma", oob = scales::squish, limits = c(1, 2.0)) +
   labs(title = "Forward Voltage, 400mA, 50C")
+
 ```
 
 ## Peak WL
@@ -824,6 +927,7 @@ df_summary |>
   scale_fill_viridis_c(direction = 1, option = "plasma") +#, oob = scales::squish, limits = c(1565, 1585))
   labs(title = "[Calibrated] Relative Wavelength, 400mA, 50C",
        caption = "screened for SMSR > 35dB")
+
 ```
 
 ## SMSR
@@ -845,4 +949,5 @@ df_summary |>
   facet_wrap( ~ waferID) +
   scale_fill_viridis_c(direction = 1, option = "plasma", oob = scales::squish) +
   labs(title = "SMSR, 400mA, 50C")
+
 ```
