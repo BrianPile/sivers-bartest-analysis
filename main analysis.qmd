@@ -4,6 +4,7 @@
 #| include: false
 
 # TODO: add series resistance
+rm(list = ls())
 
 # load packages
 library(tidyverse)
@@ -241,10 +242,17 @@ df_yield = df_summary |>
 ```
 
 ```{r}
-#| label: output-summary-data-pick-list
+#| label: output-summary-data
 
+fname = paste(
+  sep = "-",
+  "EEVEE",
+  config_info$lotID,
+  config_info$waferID,
+  "summary-binned-data.csv"
+  )
 
-
+data.table::fwrite(df_summary, file = file.path("./data", fname))
 
 ```
 
