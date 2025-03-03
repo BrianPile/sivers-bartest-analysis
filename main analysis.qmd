@@ -240,6 +240,16 @@ df_yield = df_summary |>
 
 ```
 
+```{r}
+#| label: output-summary-data-pick-list
+
+
+
+
+```
+
+
+
 ## summary
 
 ```{r}
@@ -373,7 +383,7 @@ df_temp |>
     source_note = "The small quantity of CH4 die are ignored in this analysis"
   ) |> 
   tab_source_note(
-    source_note = "Sets are comprised of die from CH0, CH1, CH2, aand CH3"
+    source_note = "Sets are comprised of die from CH0, CH1, CH2, and CH3"
   )
   
 ```
