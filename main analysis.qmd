@@ -243,7 +243,12 @@ fname = paste(
   "summary-binned-data.csv"
   )
 
-data.table::fwrite(df_summary, file = file.path("./data", fname))
+if (!file.exists(file.path("./data", fname))) {
+  print("saved the binned summary csv file!")
+  data.table::fwrite(df_summary, file = file.path("./data", fname))
+} else {
+  "binned summary csv file already exists, did not save a new one."
+}
 
 ```
 
