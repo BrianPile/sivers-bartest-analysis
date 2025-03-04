@@ -17,3 +17,7 @@ config_info = list( waferID = "71636_30", lotID = "P10515", input_data_path = "/
 2.  create the \_quarto.yml file
 
 title: "Sivers Bar Test Report: Lot P10515" subtitle: "EEVEE C-band Wafer 71636-30" author: "Brian Pile" date: "2024-07-03" format: html: toc: true execute: echo: false embed-resources: true
+
+3. TODO
+
+It may be necessary to calibrate Sivers bar test data on a lot-to-lot basis. If so, then the calibration factor and offset for power and wavelength, respectively, should be added to the config_info.R file. For that matter, should at some point this file be converted to JSON?
