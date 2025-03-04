@@ -468,25 +468,29 @@ df_yield |>
 ```{r}
 #| label: failure-pareto
 
-d = df_summary |> 
+d = df_summary |>
+  filter(pf_code != "PASS") |> 
   summarize(
     .by = c(pf_code),
     n = n()
   ) |> 
   mutate(pcnt = 100 * n/sum(n))
 
-
-d |> 
-  filter(pf_code != "PASS") |>
+d |>
   ggplot(aes(x = fct_reorder(pf_code, pcnt, .desc = TRUE), y = pcnt)) +
   geom_col() +
   geom_text(aes(label = paste0(round(pcnt), "%")), vjust = -0.5) +
-  coord_cartesian(ylim = c(0, 50)) +
+  coord_cartesian(ylim = c(0, 70)) +
   labs(
-    title = "Percentage by First-Failed Criteria",
-    x = "Parameter",
-    y = "(%)"
-  )
+    # title = "Percentage by First-Failed Criteria",
+    title = "Pareto for First-Failed Criteria",
+    x = NULL,
+    y = "(%)",
+    caption = paste(sep = "\n",
+                    "Notes:",
+                    "1. The order in which the criteria are checked affects the plotting result.")
+  ) +
+  theme(plot.caption = element_text(hjust = 0))
 
 ```
 
