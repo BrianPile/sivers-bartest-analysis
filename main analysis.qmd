@@ -252,8 +252,6 @@ if (!file.exists(file.path("./data", fname))) {
 
 ```
 
-
-
 ## summary
 
 ```{r}
@@ -355,6 +353,12 @@ df_temp |>
   ) |> 
   tab_source_note(
     source_note = "Sets are comprised of die from CH0, CH1, CH2, aand CH3"
+  ) |> 
+  grand_summary_rows(
+    columns = c(n, `Ideal Set Count`, `Yielded Set Count`),
+    fns = list(
+      total = ~ sum(.)
+    )
   )
 
 ```
