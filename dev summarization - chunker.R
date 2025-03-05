@@ -98,8 +98,10 @@ df_summary_osa = this_df_osa %>%
   # rename(If_osa = If) |>
   group_by(lotID, SN, tempC, If_osa) |>
   summarize(Lp = extract_peak_wav(wavelength, power),
+            Pp = extract_peak_power(power),
             SMSR = extract_smsr(wavelength, power),
-            BW20dB = extract_bw20dB(wavelength, power)) %>%
+            BW20dB = extract_bw20dB(wavelength, power),
+            .groups = "drop") %>%
   ungroup() |>
   mutate(If_osa = If_osa / 1e-3)
 
@@ -113,7 +115,7 @@ df_summary_osa_wide = df_summary_osa %>%
   mutate(If_index = seq_along(If_osa)) %>%
   ungroup() %>%
   pivot_wider(names_from = If_index,
-              values_from = c(If_osa, Lp, SMSR, BW20dB),
+              values_from = c(If_osa, Lp, Pp, SMSR, BW20dB),
               names_sep = "")
 
   cat("saving osa chunk data to file...\n")
