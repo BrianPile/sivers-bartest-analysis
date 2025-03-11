@@ -1,4 +1,4 @@
-# ALMAE requested some typical LIV curves from each wafer. So we eill:
+# ALMAE requested some typical LIV curves from each wafer. So we will:
 # 1. sample some devices that represent median performance for output power
 # 2. save the data to individual csv files
 
