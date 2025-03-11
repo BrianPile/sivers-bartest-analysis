@@ -18,3 +18,4 @@ die pick helper.qmd
 estimate bar-level thermal resistance.R
 pick and place tracking.R
 create pick and place tracking table.R
+plot raw osa data.R
