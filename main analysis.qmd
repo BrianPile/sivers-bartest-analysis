@@ -52,6 +52,7 @@ df_summary = data.table::fread(file = paste0("./data/", config_info$lotID, "_sum
     cellID = as.character(cellID),
     barID = as.character(barID)
   ) |>
+  mutate(ldID = paste0(barID, dieID), .after = dieID) |> 
   decode_eevee()
 
 # TODO: FIGURE OUT WHY this is even needed, why is NA happening???
