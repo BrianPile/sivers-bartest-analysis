@@ -2,7 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
-data
+data/
+scripts_local/
 .DS_Store
 main analysis.html
 _quarto.yml
@@ -23,3 +24,6 @@ generate die pick list for COS build.R
 P11032 bartest calibration.pptx
 
 special analysis - osa inspection.R
+
+# Microsoft Office temporary files
+~$*

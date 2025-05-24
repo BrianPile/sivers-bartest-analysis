@@ -8,6 +8,7 @@ rm(list = ls())
 
 # load packages
 library(tidyverse)
+library(here)
 library(devparext)
 library(gt)
 
@@ -18,12 +19,12 @@ theme_set(theme_bw())
 source("/Users/brianpile/POET Technologies Dropbox/Brian Pile/Brian Pile/R_scripts/POET LD maskset decoders/decode_eevee.R")
 
 # source config file
-source("./config_info.R")
+source(here("config_info.R"))
 
 # calibration constants
 # TODO: put calibration constants inside config file?
-CAL_FACTOR_Pf3 = 0.7
-CAL_OFFSET_Lp3 = -3.578
+CAL_FACTOR_Pf3 = config_info$CAL_FACTOR_Pf3
+CAL_OFFSET_Lp3 = config_info$CAL_OFFSET_Lp3
 
 # die geometry
 DIE_WIDTH = 250
@@ -44,7 +45,7 @@ circ_dat = circleFun(diameter = 75000)
 #| label: load-data
 #| eval: true
 
-df_summary = data.table::fread(file = paste0("./data/", config_info$lotID, "_summary.csv")) |> 
+df_summary = data.table::fread(file = here("data/processed", paste0(config_info$lotID, "_summary.csv"))) |> 
   as_tibble() |> 
   mutate(Pf3_cal = Pf3 * CAL_FACTOR_Pf3, .after = Pf3) |> 
   mutate(Lp3_cal = Lp3 + CAL_OFFSET_Lp3, .after = Lp3) |> 
@@ -244,11 +245,11 @@ fname = paste(
   "summary-binned-data.csv"
   )
 
-if (!file.exists(file.path("./data", fname))) {
-  print("saved the binned summary csv file!")
-  data.table::fwrite(df_summary, file = file.path("./data", fname))
+if (!file.exists(here("data/output", fname))) {
+  message("saved the binned summary csv file!")
+  data.table::fwrite(df_summary, file = here("data/output", fname))
 } else {
-  "binned summary csv file already exists, did not save a new one."
+  message("binned summary csv file already exists, did not save a new one.")
 }
 
 ```
