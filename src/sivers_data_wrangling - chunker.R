@@ -4,6 +4,7 @@
 # M4 Macbook Pro. Ref: https://www.carleton.edu/its/blog/dealing-with-a-vector-memory-exhausted-error-in-r/
 
 library(tidyverse)
+library(here)
 library(readxl)
 rm(list = ls())
 
@@ -37,8 +38,8 @@ while (TRUE) {
   this_file_list = file_list[idx1:idx2]
   
   # write message updates to console
-  print(paste0("idx1 = ", idx1))
-  print(paste0("idx2 = ", idx2))
+  message(paste0("idx1 = ", idx1))
+  message(paste0("idx2 = ", idx2))
   
   #### import L-I data ####
   df_pow_wide = this_file_list |>
@@ -119,10 +120,10 @@ while (TRUE) {
     as_tibble()
   
   # save to csv file
-  print("saving liv chunk data to file...")
+  message("Saving liv chunk data to file...")
   data.table::fwrite(
     x = df_liv,
-    file = paste0("./data/", config_info$lotID, "_combined_LIV.csv"),
+    file = here("data/processed", paste0(config_info$lotID, "_combined_LIV.csv")),
     append = append_mode
   )
   append_mode = TRUE # on subsequent iteration append to file
@@ -137,10 +138,10 @@ while (TRUE) {
 }
 
 # remove duplicate data
-df_liv = data.table::fread(paste0("./data/", config_info$lotID, "_combined_LIV.csv"))
+df_liv = data.table::fread(here("data/processed", paste0(config_info$lotID, "_combined_LIV.csv")))
 df_liv |> 
   distinct(SN, tempC, current, .keep_all = TRUE) |> 
-  data.table::fwrite(file = paste0("./data/", config_info$lotID, "_combined_LIV.csv"))
+  data.table::fwrite(file = here("data/processed", paste0(config_info$lotID, "_combined_LIV.csv")))
 
 # clean up
 rm(df_liv, df_pow, df_pow_wide, df_vf, df_vf_wide)
@@ -163,8 +164,8 @@ while (TRUE) {
   this_file_list = file_list[idx1:idx2]
   
   # write message updates to console
-  print(paste0("idx1 = ", idx1))
-  print(paste0("idx2 = ", idx2))
+  message(paste0("idx1 = ", idx1))
+  message(paste0("idx2 = ", idx2))
 
   #### import OSA data ####
   df_osa1_wide = this_file_list |>
@@ -249,10 +250,10 @@ while (TRUE) {
   rm(list = c("df_osa1", "df_osa2", "df_osa3"))
   
   # save to csv file
-  print("saving osa chunk data to file...")
+  message("Saving osa chunk data to file...")
   data.table::fwrite(
     x = df_osa,
-    file = paste0("./data/", config_info$lotID, "_combined_OSA.csv"),
+    file = here("data/processed", paste0(config_info$lotID, "_combined_OSA.csv")),
     append = append_mode
   )
   append_mode = TRUE # on subsequent iteration append to file
@@ -267,7 +268,7 @@ while (TRUE) {
 }
 
 # remove duplicate data
-df_osa = data.table::fread(file = paste0("./data/", config_info$lotID, "_combined_OSA.csv"))
+df_osa = data.table::fread(file = here("data/processed", paste0(config_info$lotID, "_combined_OSA.csv")))
 df_osa |> 
   distinct(SN, tempC, If, wavelength, .keep_all = TRUE) |> 
-  data.table::fwrite(file = paste0("./data/", config_info$lotID, "_combined_OSA.csv"))
+  data.table::fwrite(file = here("data/processed", paste0(config_info$lotID, "_combined_OSA.csv")))
