@@ -1,4 +1,7 @@
 # Sivers LOT Data Summarization
+
+# NOTE: A chunk here is a single device
+
 library(tidyverse)
 library(here)
 library(devparext)

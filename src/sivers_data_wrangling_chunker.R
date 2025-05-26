@@ -3,6 +3,9 @@
 # so we don't reach the memory limit. This was set by experimenting on my 16GB
 # M4 Macbook Pro. Ref: https://www.carleton.edu/its/blog/dealing-with-a-vector-memory-exhausted-error-in-r/
 
+# NOTE: A chunk here is a single xls file.
+
+
 library(tidyverse)
 library(here)
 library(readxl)
