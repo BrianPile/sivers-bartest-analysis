@@ -10,7 +10,7 @@ rm(list = ls())
 
 # source the EEVEE mask decoder and helper functions
 source("/Users/brianpile/POET Technologies Dropbox/Brian Pile/Brian Pile/R_scripts/POET LD maskset decoders/decode_eevee.R")
-source("./config_info.R")
+source(here("config_info.R"))
 
 # input_data_path = "/Users/brianpile/POET Technologies Dropbox/Brian Pile/1) Test/1.4) Outsource (dropbox)/Sivers/P10515"
 file_list = list.files(path = config_info$input_data_path,
@@ -22,6 +22,8 @@ file_list = list.files(path = config_info$input_data_path,
 # remove problematic file(s)
 problem_files = config_info$problem_files
 file_list = setdiff(file_list, problem_files)
+
+#### LIV SECTION ####
 
 chunk_len = 10
 idx1 = 1
@@ -41,7 +43,7 @@ while (TRUE) {
   message(paste0("idx1 = ", idx1))
   message(paste0("idx2 = ", idx2))
   
-  #### import L-I data ####
+  # import L-I data
   df_pow_wide = this_file_list |>
     set_names() |>
     map(\(x) read_xls(x, sheet = "Pow", trim_ws = FALSE)) |> 
@@ -74,7 +76,7 @@ while (TRUE) {
     select(-starts_with("dummy")) |> 
     mutate(barID = str_sub(barID, start = 1, end = 2))
   
-  #### import V-I data ####
+  # import V-I data
   df_vf_wide = this_file_list |>
     set_names() |>
     map(\(x) read_xls(x, sheet = "Vf", trim_ws = FALSE)) |> 
@@ -107,7 +109,7 @@ while (TRUE) {
     select(-starts_with("dummy")) |> 
     mutate(barID = str_sub(barID, start = 1, end = 2))
   
-  #### join L-I and V-I data together ####
+  # join L-I and V-I data together
   df_liv = left_join(df_pow, df_vf) |>
     mutate(
       waferID = config_info$waferID,
@@ -137,6 +139,7 @@ while (TRUE) {
   
 }
 
+# TODO: why is this needed?
 # remove duplicate data
 df_liv = data.table::fread(here("data/processed", paste0(config_info$lotID, "_combined_LIV.csv")))
 df_liv |> 
@@ -167,7 +170,7 @@ while (TRUE) {
   message(paste0("idx1 = ", idx1))
   message(paste0("idx2 = ", idx2))
 
-  #### import OSA data ####
+  # import OSA data
   df_osa1_wide = this_file_list |>
     set_names() |>
     map(\(x) read_xls(x, sheet = "OSA1", trim_ws = FALSE)) |>
@@ -233,7 +236,6 @@ while (TRUE) {
     ) |>
     select(-starts_with("dummy")) |>
     mutate(barID = str_sub(barID, start = 1, end = 2)) |>
-    # select(filename, lotID, barID, dieID, If, wavelength, power) |>
     mutate(
       waferID = config_info$waferID,
       cellID = "NA",
@@ -241,9 +243,7 @@ while (TRUE) {
     ) |>
     correct_eevee_cellID() |>
     unite("SN", waferID, cellID, barID, dieID, sep = "-", remove = TRUE) |>
-    # select(filename, lotID, SN, tempC, If, wavelength, power) |>
     select(lotID, SN, tempC, If, wavelength, power) |>
-    # arrange(filename, lotID, SN, tempC, If, wavelength, power)
     arrange(lotID, SN, tempC, If, wavelength, power)
   
   # clean up
