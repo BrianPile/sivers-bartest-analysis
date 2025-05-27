@@ -76,8 +76,7 @@ df_osa = data.table::fread(here("data/processed", paste0(config_info$lotID, "_co
   rename(If_osa = If)
 
 df_osa = df_osa |> 
-  # group_by(filename, lotID, SN, tempC, If_osa) |> 
-  group_by(filename, lotID, SN, tempC) |> 
+  group_by(lotID, SN, tempC) |> 
   mutate(group_id = cur_group_id()) |> 
   ungroup()
 
