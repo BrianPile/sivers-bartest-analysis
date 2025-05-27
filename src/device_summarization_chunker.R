@@ -76,8 +76,7 @@ df_osa = data.table::fread(here("data/processed", paste0(config_info$lotID, "_co
   rename(If_osa = If)
 
 df_osa = df_osa |> 
-  # group_by(filename, lotID, SN, tempC, If_osa) |> 
-  group_by(filename, lotID, SN, tempC) |> 
+  group_by(lotID, SN, tempC) |> 
   mutate(group_id = cur_group_id()) |> 
   ungroup()
 
@@ -102,7 +101,7 @@ while (TRUE) {
   
   df_summary_osa = this_df_osa %>%
     # rename(If_osa = If) |>
-    group_by(filename, lotID, SN, tempC, If_osa) |>
+    group_by(lotID, SN, tempC, If_osa) |>
     summarize(Lp = extract_peak_wav(wavelength, power),
               Pp = extract_peak_power(power),
               SMSR = extract_smsr(wavelength, power),
@@ -111,12 +110,7 @@ while (TRUE) {
     ungroup() |>
     mutate(If_osa = If_osa / 1e-3)
   
-  # df_summary_osa = df_summary_osa %>%
-  #   tidyfast::dt_separate(SN, into = c("waferID", "cellID", "barID", "dieID"), sep = "-", remove = FALSE) %>%
-  #   relocate(waferID:dieID, .after = SN)
-  
   df_summary_osa_wide = df_summary_osa %>%
-    # mutate(ID = row_number()) %>%
     group_by(SN, tempC) %>%
     mutate(If_index = seq_along(If_osa)) %>%
     ungroup() %>%
