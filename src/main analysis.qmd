@@ -45,7 +45,7 @@ circ_dat = circleFun(diameter = 75000)
 #| label: load-data
 #| eval: true
 
-df_summary = data.table::fread(file = here("data/processed", paste0(config_info$lotID, "_summary.csv"))) |> 
+df_summary = data.table::fread(file = here("data/output", paste0(config_info$lotID, "_summary.csv"))) |> 
   as_tibble() |> 
   mutate(Pf3_cal = Pf3 * CAL_FACTOR_Pf3, .after = Pf3) |> 
   mutate(Lp3_cal = Lp3 + CAL_OFFSET_Lp3, .after = Lp3) |> 
