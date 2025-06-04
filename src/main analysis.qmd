@@ -65,28 +65,44 @@ df_summary = df_summary |> filter(!is.na(Lp3))
 #| label: wavelength-binning
 
 # ELS wavelength plan
-# TODO: can use cut function instead to do this?
-df_wl_info = tribble(
-  ~CH,     ~WL_min,     ~WL_max,
-  0,       1567.13,     1570.4199999,
-  1,       1570.42,     1573.7099999,
-  2,       1573.71,     1577.0299999,
-  3,       1577.03,     1580.3499999,
-  4,       1580.35,     1583.69
-)
+# TODO: can use cut function instead to do this? I tried, see below...
+# df_wl_info = tribble(
+#   ~CH,     ~WL_min,     ~WL_max,
+#   0,       1567.13,     1570.4199999,
+#   1,       1570.42,     1573.7099999,
+#   2,       1573.71,     1577.0299999,
+#   3,       1577.03,     1580.3499999,
+#   4,       1580.35,     1583.69
+# )
+# 
+# # coarse wavelength binning into "channels"
+# df_summary = df_summary |> 
+#   mutate(ch_bin = case_when(
+#     Lp3_cal < df_wl_info[[1, "WL_min"]] ~ "too low",
+#     between(Lp3_cal, df_wl_info[[1, "WL_min"]], df_wl_info[[1, "WL_max"]]) ~ "0",
+#     between(Lp3_cal, df_wl_info[[2, "WL_min"]], df_wl_info[[2, "WL_max"]]) ~ "1",
+#     between(Lp3_cal, df_wl_info[[3, "WL_min"]], df_wl_info[[3, "WL_max"]]) ~ "2",
+#     between(Lp3_cal, df_wl_info[[4, "WL_min"]], df_wl_info[[4, "WL_max"]]) ~ "3",
+#     between(Lp3_cal, df_wl_info[[5, "WL_min"]], df_wl_info[[5, "WL_max"]]) ~ "4",
+#     Lp3_cal > df_wl_info[[4, "WL_max"]] ~ "too high",
+#     .default = NA
+#   ))
 
-# coarse wavelength binning into "channels"
+wl_ch_boundaries = c(1567.13, 1570.42, 1573.71, 1577.03, 1580.35, 1583.69)
 df_summary = df_summary |> 
-  mutate(ch_bin = case_when(
-    Lp3_cal < df_wl_info[[1, "WL_min"]] ~ "too low",
-    between(Lp3_cal, df_wl_info[[1, "WL_min"]], df_wl_info[[1, "WL_max"]]) ~ "0",
-    between(Lp3_cal, df_wl_info[[2, "WL_min"]], df_wl_info[[2, "WL_max"]]) ~ "1",
-    between(Lp3_cal, df_wl_info[[3, "WL_min"]], df_wl_info[[3, "WL_max"]]) ~ "2",
-    between(Lp3_cal, df_wl_info[[4, "WL_min"]], df_wl_info[[4, "WL_max"]]) ~ "3",
-    between(Lp3_cal, df_wl_info[[5, "WL_min"]], df_wl_info[[5, "WL_max"]]) ~ "4",
-    Lp3_cal > df_wl_info[[4, "WL_max"]] ~ "too high",
-    .default = NA
-  ))
+  mutate(
+    ch_bin = cut(
+      Lp3_cal,
+      breaks = wl_ch_boundaries,
+      labels = FALSE,
+      include.lowest = TRUE,
+      right = TRUE
+    ) - 1,
+    ch_bin = as.character(ch_bin)
+  )
+
+
+
 
 # fine wavelength binning into "sub bins" that span the entire wl range
 c = 299792458 # speed of light (m/s)
