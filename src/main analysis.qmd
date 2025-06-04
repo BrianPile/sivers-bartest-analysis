@@ -168,7 +168,8 @@ Pf3_min = 80L
 # Vf3_max = 2.0
 Vf3_max = 2.5  # making exception because CoC voltage looked normal and this crushes the yield otherwise
 Vf3_min = 1.3
-SMSR3_min = 35L
+# SMSR3_min = 35L
+SMSR3_min = 10L
 # Lp3_min = 1570.06
 Lp3_min = 1567.13 # assumes creating a CH0 is acceptable, normally this should be 1570.06
 Lp3_max = 1583.69
@@ -502,7 +503,7 @@ d |>
   ggplot(aes(x = fct_reorder(pf_code, pcnt, .desc = TRUE), y = pcnt)) +
   geom_col() +
   geom_text(aes(label = paste0(round(pcnt), "%")), vjust = -0.5) +
-  coord_cartesian(ylim = c(0, 70)) +
+  coord_cartesian(ylim = c(0, 100)) +
   labs(
     # title = "Percentage by First-Failed Criteria",
     title = "Pareto of First-Failed Criteria",
@@ -732,7 +733,7 @@ df_summary |>
 df_summary |> 
   ggplot(aes(x = SMSR3)) +
   stat_ecdf(pad = FALSE, na.rm = TRUE) +
-  geom_vline(xintercept = 35, color = "red") +
+  geom_vline(xintercept = SMSR3_min, color = "red") +
   annotate(
     geom = "segment", x = SMSR3_min, xend = SMSR3_min + 2.5, y = 0, yend = 0,
     color = "red", arrow = arrow(length = unit(.02, "npc"), type = "closed")
@@ -757,13 +758,13 @@ df_summary |>
   filter(SMSR3 > 35) |> 
   # ggplot(aes(x = Lp3_cal, color = as.factor(lotID))) +
   ggplot(aes(x = Lp3_cal)) +
-  geom_rect(
-    data = df_wl_info |> filter(CH != -1),
-    mapping = aes(xmin = WL_min, xmax = WL_max, ymin = 0, ymax = 1, fill = as.factor(CH)),
-    inherit.aes = FALSE,
-    alpha = 0.5,
-    color = "black",
-    linewidth = 0.2) +
+  # geom_rect(
+  #   data = df_wl_info |> filter(CH != -1),
+  #   mapping = aes(xmin = WL_min, xmax = WL_max, ymin = 0, ymax = 1, fill = as.factor(CH)),
+  #   inherit.aes = FALSE,
+  #   alpha = 0.5,
+  #   color = "black",
+  #   linewidth = 0.2) +
   stat_ecdf(pad = FALSE) +
   # geom_vline(xintercept = c(1572.06, 1575.37, 1578.69, 1582.02), color = "gray60") +
   
